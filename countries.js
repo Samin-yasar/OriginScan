@@ -1,6 +1,6 @@
 /*
  * OriginScan
- * Copyright (C) 2025 Samin Yasar <[YOUR EMAIL ADDRESS, optional]>
+ * Copyright (C) 2025 Samin Yasar [https://github.com/Samin-yasar]
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
