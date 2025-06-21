@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en" id="html-root">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OriginScan</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+  <div id="reading-guide" class="reading-guide" style="display: none;"></div>
+
+  <div class="bg-animation"></div>
+  
+  <div class="particles-container">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <i class="fas fa-barcode"></i>
+        <span>OriginScan</span>
+      </div>
+      <div class="nav-controls">
+        <button id="changelog-btn" class="nav-btn" aria-label="View Changelog">
+          <i class="fas fa-history"></i>
+        </button>
+        <button id="help-btn" class="nav-btn" aria-label="Help">
+          <i class="fas fa-question-circle"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <header class="header">
+      <h1>OriginScan</h1>
+      <p>Discover product origins instantly with our advanced scanner</p>
+      <div class="header-stats">
+        <div class="stat-item">
+          <span class="stat-number" id="scan-count">0</span>
+          <span class="stat-label">Scans Today</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">195+</span>
+          <span class="stat-label">Countries</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">99%</span>
+          <span class="stat-label">Accuracy</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="main-grid">
+      <div class="scanner-card">
+        <div class="card-header">
+          <h2><i class="fas fa-camera"></i> Scanner</h2>
+          <div class="scan-status" id="scan-status">
+            <div class="status-indicator"></div>
+            <span>Ready to scan</span>
+          </div>
+        </div>
+        
+        <div class="scanner-container">
+          <div id="reader" class="camera-view">
+            <div class="camera-overlay">
+              <div class="scan-frame">
+                <div class="corner top-left"></div>
+                <div class="corner top-right"></div>
+                <div class="corner bottom-left"></div>
+                <div class="corner bottom-right"></div>
+                <div class="scan-line"></div>
+              </div>
+              <div class="scan-instructions">
+                <i class="fas fa-barcode scan-icon"></i>
+                <p>Position barcode within the frame</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="scanner-controls">
+            <button id="start-scan" class="btn btn-primary">
+              <i class="fas fa-play"></i>
+              <span>Start Scanning</span>
+            </button>
+            <button id="stop-scan" class="btn btn-secondary" style="display: none;">
+              <i class="fas fa-stop"></i>
+              <span>Stop Scanning</span>
+            </button>
+            <button id="switch-camera" class="btn btn-outline" style="display: none;">
+              <i class="fas fa-sync-alt"></i>
+              <span>Switch Camera</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="manual-input-section">
+          <div class="divider">
+            <span>or enter manually</span>
+          </div>
+          
+          <div class="input-group">
+            <div class="input-container">
+              <input type="text" id="manual-input" placeholder="Enter barcode number" aria-describedby="manual-input-error">
+              <button id="clear-input" class="clear-btn" aria-label="Clear input">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <button id="check-manual" class="btn btn-accent">
+              <i class="fas fa-search"></i>
+              <span>Check Origin</span>
+            </button>
+          </div>
+          
+          <div id="scanner-error" class="error-message" role="alert"></div>
+          <div id="manual-input-error" class="error-message" role="alert"></div>
+        </div>
+
+        <!-- New section for file import -->
+        <div class="file-input-section" style="margin-top: 20px;">
+          <input type="file" id="barcode-file-input" accept="image/jpeg,image/png" style="display: none;">
+          <button id="import-from-file-btn" class="btn btn-outline" style="width: 100%;">
+            <i class="fas fa-file-upload"></i>
+            <span>Upload Barcode Image</span>
+          </button>
+          <div id="file-input-error" class="error-message" role="alert"></div>
+        </div>
+      </div>
+
+      <div class="results-card">
+        <div class="card-header">
+          <h2><i class="fas fa-globe"></i> Product Origin</h2>
+          <button id="share-result" class="share-btn" style="display: none;">
+            <i class="fas fa-share-alt"></i>
+          </button>
+        </div>
+        
+        <div id="country-info" class="country-display">
+          <div class="placeholder-state">
+            <div class="placeholder-icon">
+              <i class="fas fa-search"></i>
+            </div>
+            <h3>Scan or enter a barcode</h3>
+            <p>Get instant information about product origin and country details</p>
+          </div>
+          
+          <div id="country-result" class="country-result" style="display: none;">
+            <div class="country-header">
+              <div class="country-flag" id="country-flag"></div>
+              <div class="country-details">
+                <h3 id="country-name"></h3>
+                <p id="country-code"></p>
+              </div>
+              <div class="confidence-badge" id="confidence-badge">
+                <span class="confidence-label">Confidence</span>
+                <span class="confidence-value"></span>
+              </div>
+            </div>
+            
+            <div class="country-stats">
+              <div class="stat-row">
+                <span class="stat-label">Region:</span>
+                <span class="stat-value" id="country-region"></span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Population:</span>
+                <span class="stat-value" id="country-population"></span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Currency:</span>
+                <span class="stat-value" id="country-currency"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="map-card">
+        <div class="card-header">
+          <h2><i class="fas fa-map-marker-alt"></i> Location</h2>
+          <div class="map-controls">
+            <button id="zoom-in" class="map-btn">
+              <i class="fas fa-plus"></i>
+            </button>
+            <button id="zoom-out" class="map-btn">
+              <i class="fas fa-minus"></i>
+            </button>
+            <button id="reset-view" class="map-btn">
+              <i class="fas fa-home"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div id="map" class="map-container"></div>
+        
+        <div class="map-legend">
+          <div class="legend-item">
+            <div class="legend-color primary"></div>
+            <span>Product Origin</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color secondary"></div>
+            <span>Manufacturing Hub</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-card">
+        <div class="card-header">
+          <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+        </div>
+        
+        <div class="actions-grid">
+          <button id="report-suspicious" class="action-btn danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Report Suspicious</span>
+          </button>
+          <button id="export-data" class="action-btn primary">
+            <i class="fas fa-download"></i>
+            <span>Export Data</span>
+          </button>
+          <button class="action-btn secondary" onclick="window.location.href='#scan-history-list'">
+            <i class="fas fa-history"></i>
+            <span>Scan History</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="recent-scans">
+      <div class="section-header">
+        <h2><i class="fas fa-clock"></i> Recent Scans</h2>
+        <button id="clear-history" class="btn btn-outline-sm">Clear All</button>
+      </div>
+      
+      <div id="scan-history-list" class="scan-list">
+        <div class="empty-state">
+          <i class="fas fa-barcode"></i>
+          <p>No recent scans</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="accessibility-fab">
+    <button id="accessibility-btn" class="fab-btn" aria-label="Open Accessibility Settings">
+      <i class="fas fa-universal-access"></i>
+    </button>
+    <div id="accessibility-panel" class="accessibility-panel">
+        <div class="panel-header">
+            <h3>Accessibility</h3>
+        </div>
+        <div class="panel-group">
+            <button id="dark-mode-toggle" class="panel-btn" title="Toggle Theme"><i class="fas fa-moon"></i> Theme</button>
+            <button id="invert-colors-toggle" class="panel-btn" title="Invert Colors"><i class="fas fa-adjust"></i> Invert</button>
+        </div>
+        <div class="panel-group">
+            <label>Text Size</label>
+            <div class="btn-trio">
+                <button id="decrease-text" class="panel-btn-sm" title="Decrease Text Size">A-</button>
+                <button id="reset-text" class="panel-btn-sm" title="Reset Text Size">A</button>
+                <button id="increase-text" class="panel-btn-sm" title="Increase Text Size">A+</button>
+            </div>
+        </div>
+        <div class="panel-group">
+            <button id="highlight-links-toggle" class="panel-btn" title="Highlight Links"><i class="fas fa-link"></i> Links</button>
+            <button id="reading-guide-toggle" class="panel-btn" title="Reading Guide"><i class="fas fa-book-reader"></i> Guide</button>
+        </div>
+        <div class="panel-footer">
+            <button id="reset-accessibility" class="panel-btn-full">Reset All</button>
+        </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <div id="report-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Report Suspicious Barcode</h2>
+        <button id="close-report" class="close-btn" aria-label="Close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form action="https://formsubmit.co/samin.rash525@silomails.com" method="POST" id="report-form" target="_blank">
+          <input type="text" name="_honey" style="display:none">
+          <input type="hidden" name="_captcha" value="false">
+          <input type="hidden" name="_subject" value="Suspicious Barcode Report from OriginScan">
+
+          <div class="form-group">
+            <label for="report-barcode">Barcode:</label>
+            <input type="text" id="report-barcode" name="Barcode" readonly>
+            <small>This barcode was automatically detected.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="report-description">Description of Suspicion:</label>
+            <textarea id="report-description" name="Description" rows="5" placeholder="Please describe why you find this barcode or product suspicious." required></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Report</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="help-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>How to Use</h2>
+        <button id="close-help" class="close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="help-section">
+          <h3><i class="fas fa-camera"></i> Camera Scanning</h3>
+          <p>Click "Start Scanning" to activate the camera. Position the product's barcode fully within the highlighted frame. The scanner will automatically detect and process it. If you have multiple cameras, use the "Switch Camera" button.</p>
+        </div>
+        <div class="help-section">
+          <h3><i class="fas fa-keyboard"></i> Manual Entry</h3>
+          <p>If scanning isn't possible, type or paste the barcode number (8-13 digits) into the input field and click "Check Origin" to see the results.</p>
+        </div>
+        <div class="help-section">
+          <h3><i class="fas fa-file-upload"></i> Upload Barcode Image</h3>
+          <p>Click "Upload Barcode Image" to select a JPG or PNG image containing a barcode. The app will attempt to scan the barcode from the image.</p>
+        </div>
+        <div class="help-section">
+          <h3><i class="fas fa-universal-access"></i> Accessibility</h3>
+          <p>Click the accessibility icon (bottom right) to open the settings panel. You can adjust the theme, text size, and enable reading aids to suit your needs.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="changelog-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Changelog</h2>
+        <button id="close-changelog" class="close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="changelog-entry">
+          <h4>Version 1.1.0</h4>
+          <span class="changelog-date">June 21, 2025</span>
+          <ul>
+            <li><span class="badge new">New</span> Added a full Accessibility Panel with options for theme, text size, color inversion, link highlighting, and a reading guide.</li>
+            <li><span class="badge new">New</span> Added this Changelog to keep you updated on new features and fixes.</li>
+            <li><span class="badge fix">Fix</span> Overhauled the camera scanning logic to resolve critical bugs where the scanner would fail to start or switch between cameras.</li>
+            <li><span class="badge improvement">UI</span> Improved visual feedback and error messages for a smoother experience.</li>
+          </ul>
+        </div>
+        <div class="changelog-entry">
+          <h4>Version 1.0.0</h4>
+          <span class="changelog-date">May 15, 2025</span>
+          <ul>
+            <li><span class="badge new">New</span> Initial release of ScanGeo!</li>
+            <li><span class="badge improvement">Feature</span> Barcode scanning via camera or manual input.</li>
+            <li><span class="badge improvement">Feature</span> Country of origin lookup from EAN-13 prefixes.</li>
+            <li><span class="badge improvement">Feature</span> Interactive map to visualize product origin.</li>
+            <li><span class="badge improvement">Feature</span> Dark mode and local scan history.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p>Processing barcode...</p>
+    </div>
+  </div>
+
+  <script type="module" src="countries.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
