@@ -108,4 +108,6 @@ Contributions are welcome! If you have ideas for new features, bug fixes, or imp
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+Copyright (C) 2025 [**Samin Yasar**](https://github.com/Samin-yasar). 
+This program is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License (GPL v3)** as published by the Free Software Foundation, version 3 of the License. See the [LICENSE](LICENSE) file for details.
+
