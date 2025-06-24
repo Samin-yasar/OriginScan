@@ -294,8 +294,9 @@
       </div>
 
       <div class="modal-body">
-        <form action="https://formsubmit.co/samin.rash525@silomails.com" method="POST" id="report-form" target="_blank">
-          <input type="text" name="_honey" style="display:none">
+        <form action="https://formsubmit.co/samin.rash525@silomails.com" method="POST" id="report-form">
+          <input type="hidden" name="_next" value="https://samin-yasar.github.io/thank-you.html">
+          <input type="text" name="_honey" class="honeypot" autocomplete="off" aria-hidden="true" tabindex="-1">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_subject" value="Suspicious Barcode Report from OriginScan">
 
