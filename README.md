@@ -67,6 +67,16 @@ OriginScan is a web-based utility that allows you to scan EAN-13 and UPC-A barco
 
 ---
 
+## Policies
+
+Please review our policies to understand your rights and responsibilities when using OriginScan:
+
+* [**Terms of Service**](./policy/terms-of-service.html): Outlines the rules and conditions for using OriginScan.
+* [**Privacy Notice**](./policy/privacy-notice.html): Explains how we handle your data, emphasizing our zero-knowledge architecture.
+* [**Disclaimer**](./policy/disclaimer.html): Clarifies the limitations of our Services, including the accuracy of barcode origin data.
+
+---
+
 ## Local Development
 
 To run this project on your local machine, follow these steps.
@@ -110,4 +120,3 @@ Contributions are welcome! If you have ideas for new features, bug fixes, or imp
 
 Copyright (C) 2025 [**Samin Yasar**](https://github.com/Samin-yasar). 
 This program is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License (GPL v3)** as published by the Free Software Foundation, version 3 of the License. See the [LICENSE](LICENSE) file for details.
-
