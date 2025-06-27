@@ -1,0 +1,335 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OriginScan Privacy Notice</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: #fff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    h1, h2, h3 {
+      color: #1e3a8a; /* Blue shade */
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    h2 {
+      font-size: 1.8rem;
+      margin-top: 2rem;
+      border-bottom: 2px solid #3b82f6; /* Lighter blue */
+      padding-bottom: 0.5rem;
+    }
+    h3 {
+      font-size: 1.4rem;
+      margin-top: 1.5rem;
+    }
+    p {
+      margin: 1rem 0;
+    }
+    ul {
+      list-style-type: disc;
+      margin: 1rem 0;
+      padding-left: 2rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    th, td {
+      border: 1px solid #bfdbfe; /* Light blue border */
+      padding: 0.8rem;
+      text-align: left;
+    }
+    th {
+      background-color: #3b82f6; /* Blue header */
+      color: #fff;
+    }
+    a {
+      color: #2563eb; /* Blue link */
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .highlight {
+      background-color: #dbeafe; /* Light blue highlight */
+      padding: 0.5rem;
+      border-radius: 4px;
+    }
+    .toc {
+      background-color: #eff6ff; /* Very light blue */
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+    .toc ul {
+      list-style-type: decimal;
+    }
+    .contact-info {
+      margin-top: 2rem;
+      padding: 1rem;
+      background-color: #dbeafe;
+      border-radius: 8px;
+    }
+    @media (max-width: 600px) {
+      .container {
+        margin: 1rem;
+        padding: 1rem;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      h2 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Privacy Notice</h1>
+    <p><strong>Last updated: June 27, 2025</strong></p>
+
+    <p>This Privacy Notice for OriginScan ("we," "us," or "our") outlines how and why we might access, collect, store, use, and/or share ("process") your information when you use our services ("Services"), including when you:</p>
+    <ul>
+      <li>Visit our website at <a href="https://samin-yasar.github.io/OriginScan">https://samin-yasar.github.io/OriginScan</a> that links to this Privacy Notice.</li>
+      <li>Use OriginScan, a lightweight, client-side barcode scanning tool designed with zero-knowledge architecture, ensuring all scan data remains local to your device with no accounts, cloud storage, or analytics.</li>
+      <li>Engage with us in related ways, such as reporting suspicious barcodes, exporting scan history, or accessing our support channels.</li>
+    </ul>
+    <p>If you have questions or concerns, this Privacy Notice will clarify your privacy rights and choices. As OriginScan operates with a zero-knowledge architecture, we do not collect or process personal information in the traditional sense, except in limited cases such as reporting suspicious barcodes. If you do not agree with our policies, please refrain from using our Services. For inquiries, contact us at <a href="mailto:samin.rash525@silomails.com">samin.rash525@silomails.com</a>.</p>
+
+    <h2>Summary of Key Points</h2>
+    <p><strong>What personal information do we process?</strong> OriginScan processes minimal personal information. All barcode scanning and processing occur locally in your browser, with scan results stored in the "Scan History" and displayed in the "Product Origin" section with metadata (e.g., barcode, country, timestamp). Aggregated data may be shown in the "Scans Today" statistic, stored locally. Personal information, such as names or contact details, is not collected unless voluntarily provided when submitting a suspicious barcode report, where you may include a description and optionally an email address for follow-up.</p>
+    <p><strong>Do we process any sensitive personal information?</strong> OriginScan does not process sensitive personal information unless embedded in scanned barcodes (e.g., identifiers or payment details). Such data is decoded and stored locally without transmission. If you submit a suspicious barcode report, you may voluntarily include sensitive information in the description, which is processed only for the report and not stored by us beyond submission.</p>
+    <p><strong>Do we collect any information from third parties?</strong> We collect limited data from third parties (e.g., OpenStreetMap for country coordinates, Rest Countries API for population data) to enrich scan results, but this data is not personal and is processed locally or fetched in real-time without storing user-specific information.</p>
+    <p><strong>How do we process your information?</strong> All barcode scanning and data processing occur locally in your browser. Scanned barcode data is displayed in the "Product Origin" section, stored in the "Scan History" with metadata, and may trigger third-party API calls (e.g., for map coordinates or population) without transmitting personal data. Suspicious barcode reports are sent to our server with the provided barcode and description, and optionally an email, for review.</p>
+    <p><strong>In what situations and with which parties do we share personal information?</strong> OriginScan does not share personal information except when you submit a suspicious barcode report, where the barcode, description, and optional email are sent to our server for processing. No other data is shared with third parties, as scan results and history remain local.</p>
+    <p><strong>How do we keep your information safe?</strong> Local data (scan results, history) is protected by your device’s and browser’s security features (e.g., encryption, access controls). Suspicious barcode reports are transmitted securely to our server using HTTPS, with minimal data retention for review purposes only.</p>
+    <p><strong>What are your rights?</strong> You control your data through OriginScan’s interface (e.g., clear, export, or import scan history) and browser settings. For suspicious barcode reports, you may request access, correction, or deletion of submitted data by contacting us, though traditional data protection rights are limited due to our zero-knowledge architecture.</p>
+    <p><strong>How do you exercise your rights?</strong> Manage local data via OriginScan’s interface (e.g., "Clear All" for history) or browser storage settings. For suspicious barcode report data, contact us at <a href="mailto:samin.rash525@silomails.com">samin.rash525@silomails.com</a> to review, update, or delete your submission.</p>
+    <p><strong>Review the Privacy Notice in full below.</strong></p>
+
+    <div class="toc">
+      <h2>Table of Contents</h2>
+      <ul>
+        <li><a href="#section1">What Information Do We Collect?</a></li>
+        <li><a href="#section2">How Do We Process Your Information?</a></li>
+        <li><a href="#section3">What Legal Bases Do We Rely On to Process Your Information?</a></li>
+        <li><a href="#section4">When and With Whom Do We Share Your Personal Information?</a></li>
+        <li><a href="#section5">How Long Do We Keep Your Information?</a></li>
+        <li><a href="#section6">How Do We Keep Your Information Safe?</a></li>
+        <li><a href="#section7">What Are Your Privacy Rights?</a></li>
+        <li><a href="#section8">Controls for Do-Not-Track Features</a></li>
+        <li><a href="#section9">Do United States Residents Have Specific Privacy Rights?</a></li>
+        <li><a href="#section10">Do Other Regions Have Specific Privacy Rights?</a></li>
+        <li><a href="#section11">Zero-Knowledge Architecture</a></li>
+        <li><a href="#section12">Client-Side Processing and Limited Server Communication</a></li>
+        <li><a href="#section13">No Cookies, Tracking, or Analytics</a></li>
+        <li><a href="#section14">Do We Make Updates to This Notice?</a></li>
+        <li><a href="#section15">How Can You Contact Us About This Notice?</a></li>
+        <li><a href="#section16">How Can You Review, Update, or Delete the Data We Collect From You?</a></li>
+      </ul>
+    </div>
+
+    <h2 id="section1">1. What Information Do We Collect?</h2>
+    <h3>Personal Information You Disclose to Us</h3>
+    <p class="highlight"><strong>In Short:</strong> OriginScan collects minimal personal information, limited to voluntary submissions in suspicious barcode reports; all other data is processed and stored locally.</p>
+    <p>OriginScan processes barcode data locally within your browser, without accounts or external storage. When you scan a barcode using your device’s camera, upload an image, or enter a barcode manually, the data is displayed in the "Product Origin" section and stored in the "Scan History" with metadata (e.g., barcode, country, flag, timestamp). The "Scans Today" statistic tracks scan counts locally. No personal information (e.g., name, email, IP address) is collected during scanning, unless embedded in the barcode itself, in which case it is only stored locally. When submitting a suspicious barcode report, you may voluntarily provide a description and an optional email address, which we collect solely for processing the report.</p>
+    <h3>Sensitive Information</h3>
+    <p>OriginScan does not process sensitive personal information unless embedded in scanned barcodes (e.g., financial details or identifiers), which is decoded and stored locally without transmission. If you include sensitive information in a suspicious barcode report’s description, it is processed only for the report and not stored beyond submission.</p>
+    <h3>Information from Third Parties</h3>
+    <p>OriginScan fetches non-personal data from third-party APIs (e.g., OpenStreetMap for country coordinates, Rest Countries API for population) to enrich scan results. These requests do not include personal information and are processed in real-time or cached locally in your browser.</p>
+
+    <h2 id="section2">2. How Do We Process Your Information?</h2>
+    <p class="highlight"><strong>In Short:</strong> Most processing occurs locally in your browser; suspicious barcode reports involve limited server communication.</p>
+    <p>OriginScan processes barcode data locally, decoding barcodes from camera scans, uploaded images, or manual input. Results are displayed in the "Product Origin" section and stored in the "Scan History" with metadata (e.g., barcode, country, timestamp). The "Scans Today" statistic aggregates scan counts locally. Third-party API calls (e.g., for country coordinates or population) are made in real-time without transmitting personal data. When you submit a suspicious barcode report, the barcode, description, and optional email are sent to our server via a secure form submission for review.</p>
+
+    <h2 id="section3">3. What Legal Bases Do We Rely On to Process Your Information?</h2>
+    <p class="highlight"><strong>In Short:</strong> Local processing requires no legal basis; suspicious barcode reports rely on your consent.</p>
+    <p>OriginScan’s zero-knowledge architecture ensures most data (scan results, history) is processed locally, requiring no legal basis under data protection laws (e.g., GDPR, UK GDPR, Canadian law). For suspicious barcode reports, we rely on your explicit consent to process the submitted barcode, description, and optional email, as provided during form submission.</p>
+
+    <h2 id="section4">4. When and With Whom Do We Share Your Personal Information?</h2>
+    <p class="highlight"><strong>In Short:</strong> We share personal information only for suspicious barcode reports, sent to our server for review.</p>
+    <p>OriginScan does not share scan results or history with third parties, as all data remains local. When you submit a suspicious barcode report, the barcode, description, and optional email are sent to our server for review. No other data is shared, including with business partners or in business transfers, aligning with our zero-knowledge principle.</p>
+
+    <h2 id="section5">5. How Long Do We Keep Your Information?</h2>
+    <p class="highlight"><strong>In Short:</strong> Local data persists in your browser until cleared; report data is retained only as needed.</p>
+    <p>Scan results, history, and metadata remain in your browser’s local storage until you clear them using the "Clear All" feature or browser settings. Suspicious barcode report data (barcode, description, optional email) is retained on our server only for the time necessary to review the report, after which it is deleted unless further action is required.</p>
+
+    <h2 id="section6">6. How Do We Keep Your Information Safe?</h2>
+    <p class="highlight"><strong>In Short:</strong> Local data is secured by your device; report data is transmitted securely.</p>
+    <p>Local data (scan results, history) is protected by your device’s and browser’s security features, such as encryption and access controls. Suspicious barcode reports are sent over HTTPS to our server, with minimal retention and access restricted to authorized personnel for review purposes only.</p>
+
+    <h2 id="section7">7. What Are Your Privacy Rights?</h2>
+    <p class="highlight"><strong>In Short:</strong> You control local data via the app; report data rights can be exercised by contacting us.</p>
+    <p>As most data is processed locally, traditional privacy rights (e.g., access, rectification, deletion under GDPR) apply minimally. You control scan results and history through OriginScan’s interface (e.g., view, export, clear) or browser storage settings. For suspicious barcode reports, you may request access, correction, or deletion of your submitted data by contacting us at <a href="mailto:samin.rash525@silomails.com">samin.rash525@silomails.com</a>.</p>
+
+    <h2 id="section8">8. Controls for Do-Not-Track Features</h2>
+    <p>OriginScan does not use cookies, trackers, or analytics, so Do-Not-Track (DNT) signals are irrelevant. No user behavior is monitored. If a DNT standard is adopted, we will update this notice. For California residents, OriginScan complies with the "Shine The Light" law by not sharing data with third parties for marketing.</p>
+
+    <h2 id="section9">9. Do United States Residents Have Specific Privacy Rights?</h2>
+    <p class="highlight"><strong>In Short:</strong> U.S. state privacy rights are largely inapplicable, but you control local data.</p>
+    <p>OriginScan collects minimal personal information, limited to suspicious barcode reports. The following table outlines U.S. state law categories (e.g., California, Colorado):</p>
+    <table>
+      <tr>
+        <th>Category</th>
+        <th>Examples</th>
+        <th>Collected</th>
+      </tr>
+      <tr>
+        <td>A. Identifiers</td>
+        <td>Name, email, IP address</td>
+        <td>YES (Only optional email in suspicious barcode reports)</td>
+      </tr>
+      <tr>
+        <td>B. Personal information (California Customer Records)</td>
+        <td>Name, contact information, financial details</td>
+        <td>YES (Only if included in report description)</td>
+      </tr>
+      <tr>
+        <td>C. Protected characteristics</td>
+        <td>Gender, age, race</td>
+        <td>NO</td>
+      </tr>
+      <tr>
+        <td>D. Commercial information</td>
+        <td>Transaction details</td>
+        <td>NO</td>
+      </tr>
+      <tr>
+        <td>E. Biometric information</td>
+        <td>Fingerprints, voiceprints</td>
+        <td>NO</td>
+      </tr>
+      <tr>
+        <td>F. Internet activity</td>
+        <td>Browsing history</td>
+        <td>NO</td>
+      </tr>
+      <tr>
+        <td>G. Geolocation data</td>
+        <td>Device location</td>
+        <td>NO</td>
+      </tr>
+      <tr>
+        <td>H. Audio, electronic, sensory information</td>
+        <td>Images, video</td>
+        <td>YES (Camera input processed locally in real-time, not stored; image uploads processed locally)</td>
+      </tr>
+      <tr>
+        <td>I. Professional information</td>
+        <td>Job title, work history</td>
+        <td>NO</td>
+      </tr>
+      <tr>
+        <td>J. Education information</td>
+        <td>Student records</td>
+        <td>NO</td>
+      </tr>
+      <tr>
+        <td>K. Inferences from personal information</td>
+        <td>Profiles</td>
+        <td>NO</td>
+      </tr>
+      <tr>
+        <td>L. Sensitive personal information</td>
+        <td>Financial data, IDs</td>
+        <td>YES (Only if embedded in barcodes or report descriptions, processed locally or for reports)</td>
+      </tr>
+    </table>
+    <p>You can manage local data via OriginScan’s interface or browser settings. For report data, contact us to exercise rights like access or deletion.</p>
+
+    <h2 id="section10">10. Do Other Regions Have Specific Privacy Rights?</h2>
+    <p class="highlight"><strong>In Short:</strong> Region-specific rights are limited, but you control your data.</p>
+    <p>For Australia, New Zealand, or South Africa, OriginScan’s minimal data collection (local processing and optional report submissions) complies with the Privacy Act 1988, Privacy Act 2020, and POPIA, respectively. Manage local data via the app or browser. For report data, contact us to exercise rights. Complaints can be directed to:</p>
+    <ul>
+      <li><strong>Australia</strong>: Office of the Australian Information Commissioner</li>
+      <li><strong>New Zealand</strong>: Office of New Zealand Privacy Commissioner</li>
+      <li><strong>South Africa</strong>: The Information Regulator</li>
+    </ul>
+
+    <h2 id="section11">11. Zero-Knowledge Architecture</h2>
+    <p>OriginScan’s core scanning and history features use a zero-knowledge architecture, ensuring no scan data or personal information is collected, transmitted, or stored by us, except for suspicious barcode reports. All scanning occurs in your browser, keeping data under your control.</p>
+
+    <h2 id="section12">12. Client-Side Processing and Limited Server Communication</h2>
+    <p>Most OriginScan functionalities (scanning, history, map display) are executed locally. Third-party API calls (e.g., OpenStreetMap, Rest Countries) fetch non-personal data without user identifiers. Suspicious barcode reports involve secure server communication, limited to the barcode, description, and optional email.</p>
+
+    <h2 id="section13">13. No Cookies, Tracking, or Analytics</h2>
+    <p>OriginScan does not use cookies, tracking pixels, or analytics. User behavior is not monitored, ensuring an anonymous experience, except for voluntary report submissions.</p>
+
+    <h2 id="section14">14. Do We Make Updates to This Notice?</h2>
+    <p class="highlight"><strong>In Short:</strong> Yes, we may update this notice to reflect changes or comply with laws.</p>
+    <p>We may revise this Privacy Notice, with updates indicated by a revised date. Significant changes will be prominently posted or communicated. Review this notice periodically to stay informed.</p>
+
+    <h2 id="section15">15. How Can You Contact Us About This Notice?</h2>
+    <p>For questions, contact us at:</p>
+    <div class="contact-info">
+      <p><strong>Email</strong>: <a href="mailto:samin.rash525@silomails.com">samin.rash525@silomails.com</a></p>
+      <p><strong>Post</strong>:<br>
+        Samin Yasar<br>
+        OriginScan Developer<br>
+        Dhaka, Bangladesh
+      </p>
+    </div>
+
+    <h2 id="section16">16. How Can You Review, Update, or Delete the Data We Collect From You?</h2>
+    <p>For local data, use OriginScan’s interface (e.g., "Clear All" for history) or browser storage settings to review, update, or delete scan results and history. For suspicious barcode report data, contact us at <a href="mailto:samin.rash525@silomails.com">samin.rash525@silomails.com</a> to request access, correction, or deletion. Visit our <a href="https://samin-yasar.github.io/#contact">Contact Form</a> for assistance.</p>
+  </div>
+</body>
+</html>
