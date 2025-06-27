@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" id="html-root">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | OriginScan</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 70% 30%, #c7d2fe 0%, transparent 70%),
+                        radial-gradient(circle at 20% 80%, #fbcfe8 0%, transparent 70%);
+            opacity: 0.5;
+        }
+        .particles-container {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 8s infinite ease-in-out alternate;
+        }
+        .particle:nth-child(1) { width: 80px; height: 80px; background: #818cf8; top: 10%; left: 15%; animation-delay: 0s;}
+        .particle:nth-child(2) { width: 50px; height: 50px; background: #f472b6; top: 60%; left: 80%; animation-delay: 2s;}
+        .particle:nth-child(3) { width: 100px; height: 100px; background: #38bdf8; top: 40%; left: 60%; animation-delay: 4s;}
+        .particle:nth-child(4) { width: 60px; height: 60px; background: #facc15; top: 75%; left: 25%; animation-delay: 1s;}
+        .particle:nth-child(5) { width: 40px; height: 40px; background: #34d399; top: 20%; left: 70%; animation-delay: 3s;}
+        @keyframes float {
+            0% { transform: translateY(0) scale(1);}
+            100% { transform: translateY(-30px) scale(1.1);}
+        }
+        .error-content {
+            text-align: center;
+            background: var(--bg-card, #fff);
+            border-radius: var(--radius-xl, 2rem);
+            box-shadow: var(--shadow-lg, 0 8px 32px rgba(0,0,0,0.12));
+            padding: 3rem;
+            max-width: 700px;
+            width: 90%;
+            position: relative;
+            z-index: 2;
+            animation: popIn 0.8s cubic-bezier(.68,-0.55,.27,1.55);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.8) translateY(40px); opacity: 0;}
+            100% { transform: scale(1) translateY(0); opacity: 1;}
+        }
+        .error-emoji {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: shake 1.2s infinite alternate;
+            display: inline-block;
+        }
+        @keyframes shake {
+            0% { transform: rotate(-8deg);}
+            100% { transform: rotate(8deg);}
+        }
+        .typewriter {
+            display: inline-block;
+            border-right: 2px solid #6366f1;
+            white-space: nowrap;
+            overflow: hidden;
+            animation: typing 2.5s steps(22, end), blink-caret 0.75s step-end infinite;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 600;
+            color: var(--primary, #6366f1);
+            margin-bottom: 1.5rem;
+        }
+        @keyframes typing {
+            from { width: 0;}
+            to { width: 100%;}
+        }
+        @keyframes blink-caret {
+            from, to { border-color: transparent;}
+            50% { border-color: #6366f1;}
+        }
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.9rem 1.5rem;
+            border-radius: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            box-shadow: 0 2px 8px rgba(99,102,241,0.08);
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #818cf8 0%, #6366f1 100%);
+            transform: translateY(-2px) scale(1.04);
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #6366f1;
+            border: 1px solid #6366f1;
+        }
+        .btn-secondary:hover {
+            background: #e0e7ef;
+            color: #3730a3;
+            transform: translateY(-2px) scale(1.04);
+        }
+        .suggestion-list {
+            margin: 2rem 0 1rem 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            justify-content: center;
+        }
+        .suggestion-chip {
+            background: #f3f4f6;
+            color: #6366f1;
+            border-radius: 1rem;
+            padding: 0.5rem 1.2rem;
+            font-size: 1rem;
+            cursor: pointer;
+            border: 1px solid #e0e7ef;
+            transition: background 0.2s, color 0.2s;
+        }
+        .suggestion-chip:hover {
+            background: #6366f1;
+            color: #fff;
+        }
+        .policy-notice, .signature-footer {
+            z-index: 2;
+            position: relative;
+        }
+        @media (max-width: 600px) {
+            .error-content { padding: 1.5rem;}
+            .btn { font-size: 1rem; padding: 0.7rem 1.1rem;}
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-animation"></div>
+    <div class="particles-container">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-barcode"></i>
+                <span>OriginScan</span>
+            </div>
+            <div class="nav-controls">
+                <button id="changelog-btn" class="nav-btn" aria-label="View Changelog" onclick="window.location.href='index.html#changelog-modal';">
+                    <i class="fas fa-history"></i>
+                </button>
+                <button id="help-btn" class="nav-btn" aria-label="Help" onclick="window.location.href='index.html#help-modal';">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 150px);">
+        <div class="error-content">
+            <span class="error-emoji" aria-label="Confused face">🤔</span>
+            <h1 style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 700; color: var(--text-primary, #1e293b); margin-bottom: 1rem;">
+                404
+            </h1>
+            <div class="typewriter">Oops! Page Not Found!</div>
+            <p style="font-size: 1.1rem; color: var(--text-secondary, #64748b); margin-bottom: 2rem;">
+                The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 300px; margin: 0 auto;">
+                <a href="index.html" class="btn btn-primary" style="text-decoration: none;">
+                    <i class="fas fa-home"></i> Go to Homepage
+                </a>
+                <a href="index.html#scanner-section" class="btn btn-secondary" style="text-decoration: none;">
+                    <i class="fas fa-barcode"></i> Scan a Barcode
+                </a>
+            </div>
+            <div style="margin-top:2rem;">
+                <button class="btn btn-secondary" id="random-quote-btn" style="width:100%;">
+                    <i class="fas fa-lightbulb"></i> Inspire Me!
+                </button>
+                <div id="quote-box" style="margin-top:1rem; color:#6366f1; font-style:italic; min-height:2.5em;"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="policy-notice">
+        <p>By using this service, you agree to the <a href="./policy/terms-of-service.html">Terms of Service</a>. Read more about our <a href="./policy/privacy-notice.html">Privacy Notice</a> and <a href="./policy/disclaimer.html">Disclaimer</a>.</p>
+    </footer>
+
+    <footer class="signature-footer">
+        <p>Made with a lot of coffee ☕ and love 💙 in Bangladesh</p>
+    </footer>
+
+    <script>
+        // Interactive: Random quote/inspiration
+        const quotes = [
+            "Mistakes are proof that you are trying.",
+            "Every error is an opportunity to learn.",
+            "Not all who wander are lost.",
+            "404s happen, but so does progress.",
+            "Keep scanning, keep discovering!",
+            "The best way out is always through.",
+            "Even the best explorers get lost sometimes.",
+            "You found a secret page! Or did you?",
+            "Stay curious. Stay scanning.",
+            "A detour is just another way to explore."
+        ];
+        document.getElementById('random-quote-btn').onclick = function() {
+            const quote = quotes[Math.floor(Math.random() * quotes.length)];
+            document.getElementById('quote-box').textContent = quote;
+        };
+    </script>
+</body>
+
+</html>
