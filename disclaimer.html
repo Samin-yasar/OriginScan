@@ -1,0 +1,168 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OriginScan Disclaimer</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: #fff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #1e3a8a; /* Blue shade */
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    h2 {
+      font-size: 1.8rem;
+      color: #1e3a8a;
+      margin-top: 2rem;
+      border-bottom: 2px solid #3b82f6; /* Lighter blue */
+      padding-bottom: 0.5rem;
+    }
+    p {
+      margin: 1rem 0;
+    }
+    ul {
+      list-style-type: disc;
+      margin: 1rem 0;
+      padding-left: 2rem;
+    }
+    a {
+      color: #2563eb; /* Blue link */
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .highlight {
+      background-color: #dbeafe; /* Light blue highlight */
+      padding: 0.5rem;
+      border-radius: 4px;
+    }
+    .contact-info {
+      margin-top: 2rem;
+      padding: 1rem;
+      background-color: #dbeafe;
+      border-radius: 8px;
+    }
+    @media (max-width: 600px) {
+      .container {
+        margin: 1rem;
+        padding: 1rem;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      h2 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>OriginScan Disclaimer</h1>
+    <p><strong>Last updated: June 27, 2025</strong></p>
+
+    <p>This Disclaimer applies to your use of OriginScan ("we," "us," or "our"), a lightweight, client-side barcode scanning tool available at <a href="https://samin-yasar.github.io/OriginScan">https://samin-yasar.github.io/OriginScan</a>. By using OriginScan, including its website, barcode scanning features, and related services ("Services"), you acknowledge and agree to the terms outlined in this Disclaimer. If you do not agree, please refrain from using our Services.</p>
+
+    <h2>1. General Information</h2>
+    <p class="highlight"><strong>In Short:</strong> OriginScan provides barcode scanning to identify product origins but does not guarantee accuracy or completeness of the information provided.</p>
+    <p>OriginScan is designed to decode barcodes (e.g., EAN-13, UPC-A) and provide information about the potential country of origin based on barcode prefixes, using data from third-party APIs (e.g., OpenStreetMap for coordinates, Rest Countries API for population). The information displayed, including country names, flags, population, and map locations, is provided for informational purposes only. We do not guarantee the accuracy, reliability, or completeness of this information, as it relies on external data sources and barcode standards that may not always reflect the actual product origin.</p>
+
+    <h2>2. No Warranty</h2>
+    <p class="highlight"><strong>In Short:</strong> OriginScan is provided "as is" without warranties of any kind.</p>
+    <p>The Services are provided on an "as is" and "as available" basis without any warranties, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement. We do not warrant that the Services will be uninterrupted, error-free, or free of viruses or other harmful components. You use OriginScan at your own risk, and we are not responsible for any errors or inaccuracies in the data provided.</p>
+
+    <h2>3. Limitations of Barcode Scanning</h2>
+    <p class="highlight"><strong>In Short:</strong> Barcode scanning results may not always accurately reflect a product’s true origin.</p>
+    <p>OriginScan uses barcode prefixes to estimate a product’s country of origin, but these prefixes indicate the country where the barcode was registered, not necessarily where the product was manufactured or sourced. Factors such as global supply chains, licensing, or barcode reuse may lead to inaccuracies. Additionally, third-party API data (e.g., country coordinates or population) may be outdated or incomplete. You should not rely solely on OriginScan’s results for critical decisions, such as purchasing or regulatory compliance.</p>
+
+    <h2>4. Third-Party Services</h2>
+    <p class="highlight"><strong>In Short:</strong> We are not responsible for third-party services or data used by OriginScan.</p>
+    <p>OriginScan integrates with third-party APIs, including OpenStreetMap for map coordinates and Rest Countries API for population data, to enhance scan results. We do not control these services and are not responsible for their availability, accuracy, or security. Your use of these third-party services is subject to their respective terms and privacy policies.</p>
+
+    <h2>5. User Responsibilities</h2>
+    <p class="highlight"><strong>In Short:</strong> You are responsible for your use of OriginScan and any actions taken based on its results.</p>
+    <p>You are responsible for ensuring that your use of OriginScan complies with applicable laws and regulations. When submitting suspicious barcode reports, you agree to provide accurate and lawful information. We are not liable for any consequences arising from your use of the Services, including decisions made based on scan results or interactions with third parties.</p>
+
+    <h2>6. Limitation of Liability</h2>
+    <p class="highlight"><strong>In Short:</strong> We are not liable for damages arising from your use of OriginScan.</p>
+    <p>To the fullest extent permitted by law, OriginScan, its developers, and affiliates shall not be liable for any direct, indirect, incidental, special, consequential, or punitive damages arising from your use of the Services, including but not limited to errors in scan results, reliance on inaccurate information, or service interruptions. This includes damages for loss of profits, data, or other intangible losses, even if we have been advised of the possibility of such damages.</p>
+
+    <h2>7. Suspicious Barcode Reports</h2>
+    <p class="highlight"><strong>In Short:</strong> Reports are reviewed but may not lead to action, and we are not responsible for outcomes.</p>
+    <p>OriginScan allows you to submit suspicious barcode reports, including a barcode, description, and optional email. While we aim to review these reports, we do not guarantee any specific action or response. We are not liable for any outcomes related to these reports, including failure to address reported issues or misuse of the reporting feature.</p>
+
+    <h2>8. Changes to This Disclaimer</h2>
+    <p class="highlight"><strong>In Short:</strong> We may update this Disclaimer as needed.</p>
+    <p>We reserve the right to modify this Disclaimer at any time. Updates will be indicated by a revised "Last updated" date. Significant changes will be prominently posted on our website. Continued use of OriginScan after changes constitutes your acceptance of the revised Disclaimer.</p>
+
+    <h2>9. Contact Us</h2>
+    <p>For questions or concerns about this Disclaimer, please contact us at:</p>
+    <div class="contact-info">
+      <p><strong>Email</strong>: <a href="mailto:samin.rash525@silomails.com">samin.rash525@silomails.com</a></p>
+      <p><strong>Post</strong>:<br>
+        Samin Yasar<br>
+        OriginScan Developer<br>
+        Dhaka, Bangladesh
+      </p>
+      <p><strong>Contact Form</strong>: <a href="https://samin-yasar.github.io/#contact">https://samin-yasar.github.io/#contact</a></p>
+    </div>
+  </div>
+</body>
+</html>
