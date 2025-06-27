@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+/* Enhanced style.css */
 
 * {
   margin: 0;
@@ -69,6 +70,7 @@
   --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   --gradient-warning: linear-gradient(135deg, #fad961 0%, #f76b1c 100%);
+  --gradient-bangladesh: linear-gradient(to right, #006A4E 60%, #006A4E 100%), radial-gradient(circle at 75% 50%, #F42A41 15%, transparent 16%);
   
   /* Transitions */
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -132,14 +134,27 @@ body {
 
 /* --- ACCESSIBILITY STYLES START --- */
 body.invert-colors {
-  filter: invert(1);
+  /* Optimized filter for performance and true color inversion */
+  filter: invert(100%) hue-rotate(180deg);
+  /* Hint the browser for filter and transform changes */
+  will-change: filter, transform;
+  /* Force hardware acceleration for smoother rendering */
+  transform: translateZ(0);
+  /* Add a subtle transition for a smoother effect */
+  transition: filter 0.3s ease-in-out;
 }
+
 body.invert-colors .bg-animation,
 body.invert-colors img,
 body.invert-colors .country-flag,
-body.invert-colors .leaflet-tile-pane {
-  filter: invert(1); /* Invert images back to normal */
+body.invert-colors .leaflet-tile-pane,
+body.invert-colors .signature-footer {
+  /* Re-invert specific elements to appear correctly */
+  filter: invert(100%) hue-rotate(180deg); 
+  /* Hint the browser for filter changes */
+  will-change: filter;
 }
+
 body.highlight-links a,
 body.highlight-links button {
   outline: 3px solid var(--primary) !important;
@@ -162,7 +177,6 @@ body.reading-guide-active {
 }
 /* --- ACCESSIBILITY STYLES END --- */
 
-
 /* Animated Background */
 .bg-animation {
   position: fixed;
@@ -175,6 +189,8 @@ body.reading-guide-active {
   pointer-events: none;
   background: var(--gradient-primary);
   animation: gradientShift 20s ease infinite;
+  /* Hint browser about properties that will change during animation */
+  will-change: opacity, transform, filter; 
 }
 
 @keyframes gradientShift {
@@ -287,6 +303,54 @@ body.reading-guide-active {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+}
+
+/* Footer Styles */
+footer.policy-notice {
+  text-align: center;
+  margin: 2rem 0;
+  padding: 1rem;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+footer.policy-notice a {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+footer.policy-notice a:hover {
+  text-decoration: underline;
+}
+
+footer.signature-footer {
+  text-align: center;
+  padding: 1.5rem;
+  background: var(--gradient-bangladesh);
+  background-size: 100% 100%, 100% 100%;
+  background-position: center;
+  color: var(--text-inverse);
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 1rem;
+}
+
+footer.signature-footer p {
+  margin: 0;
+}
+
+footer.signature-footer a {
+  color: var(--text-inverse);
+  font-weight: 600;
+}
+
+footer.signature-footer a:hover {
+  text-decoration: underline;
 }
 
 /* Header */
@@ -659,7 +723,7 @@ input[type="text"]:focus {
   color: var(--error);
   font-size: 0.875rem;
   margin-top: 0.5rem;
-  display: none; /* Hidden by default, shown via JS */
+  display: none;
 }
 
 /* Buttons */
@@ -752,8 +816,8 @@ input[type="text"]:focus {
 }
 
 .results-card .card-header {
-  border-bottom: none; 
-  background: none; 
+  border-bottom: none; /* Remove duplicate border */
+  background: none; /* Remove duplicate background */
   padding-bottom: 0;
 }
 
@@ -894,8 +958,8 @@ input[type="text"]:focus {
 }
 
 .map-card .card-header {
-  border-bottom: none; 
-  background: none; 
+  border-bottom: none; /* Remove duplicate border */
+  background: none; /* Remove duplicate background */
   padding-bottom: 0;
 }
 
@@ -927,7 +991,7 @@ input[type="text"]:focus {
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-top: 1rem;
-  flex-grow: 1;
+  flex-grow: 1; /* Allow map to take available space */
   position: relative; /* For leaflet map controls */
 }
 
@@ -993,7 +1057,7 @@ input[type="text"]:focus {
 /* Quick Actions Card */
 .actions-card {
   grid-column: 1 / 3;
-  padding-bottom: 2rem; 
+  padding-bottom: 2rem; /* Ensure space for content below header */
 }
 
 .actions-grid {
@@ -1239,7 +1303,6 @@ input[type="text"]:focus {
   to { transform: translateX(calc(100% + 2rem)); opacity: 0; }
 }
 
-
 /* --- MODAL AND CHANGELOG STYLES START --- */
 .modal {
   position: fixed;
@@ -1308,31 +1371,22 @@ input[type="text"]:focus {
   color: var(--primary); 
 }
 
-.honeypot {
-  position: absolute;
-  left: -9999px;
-  top: -9999px;
-  height: 0;
-  width: 0;
-  overflow: hidden;
-}
-
 .modal-body input[type="text"],
 .modal-body textarea {
   width: 100%;
   padding: 10px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background-color: var(--card-bg);
-  color: var(--text-color);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
   box-sizing: border-box;
 }
 
 .modal-body input[type="text"]:focus,
 .modal-body textarea:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
 .modal-body textarea {
@@ -1344,7 +1398,7 @@ input[type="text"]:focus {
   display: block;
   margin-top: 5px;
   font-size: 0.8em;
-  color: var(--text-color-secondary);
+  color: var(--text-secondary);
 }
 
 .modal-body .checkbox-group {
@@ -1447,7 +1501,6 @@ input[type="text"]:focus {
 .badge.fix { background-color: var(--accent); }
 .badge.improvement { background-color: var(--secondary); }
 /* --- MODAL AND CHANGELOG STYLES END --- */
-
 
 /* --- ACCESSIBILITY PANEL STYLES START --- */
 .accessibility-fab {
@@ -1573,7 +1626,6 @@ input[type="text"]:focus {
     justify-content: center;
 }
 /* --- ACCESSIBILITY PANEL STYLES END --- */
-
 
 /* Loading Overlay */
 .loading-overlay {
