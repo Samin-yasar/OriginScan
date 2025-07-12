@@ -1,5 +1,5 @@
 /*
- * OriginScan
+ * OriginScan - Improved Mobile Scanner
  * Copyright (C) 2025 Samin Yasar [https://github.com/Samin-yasar]
  *
  * This program is free software: you can redistribute it and/or modify
@@ -87,15 +87,21 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentCameraIndex = 0;
   let isScanning = false;
   let lastScannedBarcode = null;
-  let scanner = null; // Declared here
-  let map = null;     // Declared here for Leaflet
-  let currentCountryMarker = null; // Declared here for Leaflet
+  let scanner = null;
+  let map = null;
+  let currentCountryMarker = null;
+  let scanTimeout = null; // For debouncing scans
+  let lastSuccessfulScan = null; // To prevent duplicate scans
 
   // --- Accessibility Constants ---
   const FONT_STEP = 1;
   const MIN_FONT_SIZE = 12;
   const MAX_FONT_SIZE = 24;
   const DEFAULT_FONT_SIZE = 16;
+
+  // --- Mobile Detection ---
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
   // --- Initializations ---
   function initializeApp() {
@@ -107,10 +113,43 @@ document.addEventListener('DOMContentLoaded', () => {
     resetProductOriginDisplay();
     initializeMap();
     handleUrlParameters();
+    
+    // Mobile-specific initialization
+    if (isMobile) {
+      optimizeForMobile();
+    }
+  }
+
+  // --- Mobile Optimization ---
+  function optimizeForMobile() {
+    // Prevent zoom on double tap
+    document.addEventListener('touchstart', function(e) {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    });
+
+    // Prevent zoom on input focus (iOS)
+    if (isIOS) {
+      const inputs = document.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+          this.style.fontSize = '16px';
+        });
+        input.addEventListener('blur', function() {
+          this.style.fontSize = '';
+        });
+      });
+    }
+
+    // Add mobile-specific classes
+    document.body.classList.add('mobile-device');
+    if (isIOS) {
+      document.body.classList.add('ios-device');
+    }
   }
 
   // --- Image Enhancement ---
-
   function applyContrastAndGrayscale(imageData, contrast) {
     const data = imageData.data;
     const factor = (259 * (contrast * 255 + 259)) / (255 * (259 - contrast * 255));
@@ -132,12 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const weights = [0, -1, 0, -1, 5, -1, 0, -1, 0];
     const side = Math.round(Math.sqrt(weights.length));
     const halfSide = Math.floor(side / 2);
+    
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const dstOff = (y * width + x) * 4;
-        let r = 0,
-          g = 0,
-          b = 0;
+        let r = 0, g = 0, b = 0;
+        
         for (let cy = 0; cy < side; cy++) {
           for (let cx = 0; cx < side; cx++) {
             const scy = y + cy - halfSide;
@@ -151,13 +190,32 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
         }
+        
         dst[dstOff] = Math.max(0, Math.min(255, r));
         dst[dstOff + 1] = Math.max(0, Math.min(255, g));
         dst[dstOff + 2] = Math.max(0, Math.min(255, b));
         dst[dstOff + 3] = src[dstOff + 3];
       }
     }
+    
     ctx.putImageData(new ImageData(dst, width, height), 0, 0);
+  }
+
+  function enhanceFrameForScanning(video) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    ctx.drawImage(video, 0, 0);
+    
+    // Apply image enhancements
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    applyContrastAndGrayscale(imageData, 0.3);
+    ctx.putImageData(imageData, 0, 0);
+    applySharpen(ctx, canvas.width, canvas.height);
+    
+    return canvas.toDataURL('image/png');
   }
 
   async function handleEnhanceAndScan() {
@@ -165,19 +223,21 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Start the scanner first!', 'warning');
       return;
     }
+    
     const video = readerElement.querySelector('video');
     if (!video) {
       showToast('Could not find video stream.', 'error');
       return;
     }
+    
     toggleLoadingOverlay(true);
     showToast('Enhancing image...', 'info');
+    
     try {
       const enhancedDataUrl = enhanceFrameForScanning(video);
       const blob = await (await fetch(enhancedDataUrl)).blob();
-      const imageFile = new File([blob], 'enhanced-frame.png', {
-        type: blob.type
-      });
+      const imageFile = new File([blob], 'enhanced-frame.png', { type: blob.type });
+      
       const decodedText = await scanner.scanFile(imageFile, false);
       await handleBarcodeSubmission(decodedText);
     } catch (err) {
@@ -190,9 +250,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Utility Functions ---
-
   function showToast(message, type = 'info') {
     if (!toastContainer) return;
+    
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     const iconClass = {
@@ -201,12 +261,15 @@ document.addEventListener('DOMContentLoaded', () => {
       warning: 'fa-exclamation-triangle',
       info: 'fa-info-circle'
     }[type] || 'fa-info-circle';
+    
     toast.innerHTML = `<i class="fas ${iconClass}"></i> <span class="toast-message">${message}</span> <button class="toast-close-btn">&times;</button>`;
     toastContainer.appendChild(toast);
+    
     setTimeout(() => {
       toast.classList.add('fade-out');
       toast.addEventListener('transitionend', () => toast.remove());
     }, 5000);
+    
     toast.querySelector('.toast-close-btn').addEventListener('click', () => {
       toast.classList.add('fade-out');
       toast.addEventListener('transitionend', () => toast.remove());
@@ -236,13 +299,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /**
-   * Displays the product origin information on the UI.
-   * @param {object} country - The country object from countries.js.
-   * @param {string} barcode - The full barcode string.
-   * @param {number|string} population - The population to display.
-   * @param {string} confidence - The confidence string (e.g., '99%').
-   */
   function displayProductOrigin(country, barcode, population, confidence) {
     if (placeholderState) placeholderState.style.display = 'none';
     if (countryResultDisplay) countryResultDisplay.style.display = 'block';
@@ -264,15 +320,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /** Resets the product origin display to its placeholder state. */
   function resetProductOriginDisplay() {
     if (placeholderState) placeholderState.style.display = 'flex';
     if (countryResultDisplay) countryResultDisplay.style.display = 'none';
     if (shareResultBtn) shareResultBtn.style.display = 'none';
-    showMapLocation('World'); // Reset map to world view
+    showMapLocation('World');
   }
 
-  /** Checks for a 'barcode' URL parameter and processes it on load. */
   function handleUrlParameters() {
     const urlParams = new URLSearchParams(window.location.search);
     const barcodeFromUrl = urlParams.get('barcode');
@@ -285,27 +339,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Map Logic ---
-
-  /** Initializes the Leaflet map on page load. */
   function initializeMap() {
     if (!mapElement) return;
-    if (map) map.remove(); // Prevent re-initializing if already exists
-    map = L.map('map').setView([20, 0], 2); // Centered world view
+    if (map) map.remove();
+    
+    map = L.map('map').setView([20, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // Ensure map resizes correctly if its container changes size
     new ResizeObserver(() => map && map.invalidateSize()).observe(mapElement);
   }
 
-  /**
-   * Updates the map to show a country's location.
-   * @param {string} countryApiName - The clean country name for API lookup.
-   */
   async function showMapLocation(countryApiName) {
     if (!map) return;
     if (currentCountryMarker) map.removeLayer(currentCountryMarker);
+    
     if (countryApiName === 'World' || countryApiName === 'Unknown') {
       map.setView([20, 0], 2);
       return;
@@ -316,7 +365,8 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleLoadingOverlay(false);
 
     if (countryCoords) {
-      currentCountryMarker = L.marker(countryCoords).addTo(map).bindPopup(`<b>${countryApiName}</b>`).openPopup();
+      currentCountryMarker = L.marker(countryCoords).addTo(map)
+        .bindPopup(`<b>${countryApiName}</b>`).openPopup();
       map.setView(countryCoords, 5);
       showToast(`Map updated for ${countryApiName}`, 'info');
     } else {
@@ -325,17 +375,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /**
-   * Fetches coordinates for a country using OpenStreetMap Nominatim.
-   * @param {string} country - The name of the country.
-   * @returns {Promise<[number, number]|null>}
-   */
   async function getCountryCoordinates(country) {
     try {
       const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(country)}&format=json&limit=1`, {
-        headers: {
-          'User-Agent': 'OriginScan/1.2 (github.com/samin-yasar/OriginScan)'
-        }
+        headers: { 'User-Agent': 'OriginScan/1.2 (github.com/samin-yasar/OriginScan)' }
       });
       const data = await response.json();
       if (data && data.length > 0) {
@@ -347,18 +390,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
-  /**
-   * Fetches population data using Rest Countries API.
-   * @param {string} countryApiName - The clean country name for the API.
-   * @returns {Promise<number|null>}
-   */
   async function getCountryPopulation(countryApiName) {
     if (!countryApiName || countryApiName === "Unknown") return null;
+    
     try {
       const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(countryApiName)}?fields=population`, {
-        headers: {
-          'User-Agent': 'OriginScan/1.2'
-        }
+        headers: { 'User-Agent': 'OriginScan/1.2' }
       });
       if (!response.ok) return null;
       const data = await response.json();
@@ -370,14 +407,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Core Barcode Logic ---
-
-  /**
-   * Central handler for all barcode submissions (camera, manual, file).
-   * Validates and cleans the barcode before processing.
-   * @param {string} barcodeValue - The raw barcode string.
-   */
   async function handleBarcodeSubmission(barcodeValue) {
     clearAllErrors();
+    
     if (!barcodeValue) {
       updateErrorElement(manualInputErrorElement, 'Please enter a barcode number.');
       return;
@@ -397,31 +429,44 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (isScanning) await stopScanner();
+    // Prevent duplicate scans within 3 seconds
+    if (lastSuccessfulScan === cleanBarcode && scanTimeout) {
+      return;
+    }
 
+    if (isScanning) await stopScanner();
     if (manualInput) manualInput.value = cleanBarcode;
+    
+    lastSuccessfulScan = cleanBarcode;
     await processBarcode(cleanBarcode);
+    
+    // Clear the duplicate prevention after 3 seconds
+    if (scanTimeout) clearTimeout(scanTimeout);
+    scanTimeout = setTimeout(() => {
+      lastSuccessfulScan = null;
+      scanTimeout = null;
+    }, 3000);
   }
 
   function setupTapToFocus() {
     const video = readerElement.querySelector('video');
     if (!video) return;
 
-    // Use a small timeout to ensure the video stream is fully active
     setTimeout(() => {
       const stream = video.srcObject;
       if (!stream) return;
+      
       const track = stream.getVideoTracks()[0];
+      if (!track) return;
+      
       const capabilities = track.getCapabilities();
 
-      // Check if the camera supports focus control
       if (capabilities.focusMode && capabilities.focusMode.includes('manual')) {
         video.addEventListener('click', (event) => {
           const rect = video.getBoundingClientRect();
           const x = event.clientX - rect.left;
           const y = event.clientY - rect.top;
 
-          // Normalize coordinates to 0-1
           const focusPoint = {
             x: x / rect.width,
             y: y / rect.height,
@@ -429,102 +474,191 @@ document.addEventListener('DOMContentLoaded', () => {
 
           showToast('Focusing...', 'info');
 
-          // Apply focus constraints
           track.applyConstraints({
-            advanced: [{
-              focusMode: 'manual',
-              focusPoint: focusPoint
-            }]
+            advanced: [{ focusMode: 'manual', focusPoint: focusPoint }]
           }).catch(err => console.warn('Tap-to-focus failed:', err));
         });
         showToast('Tap to focus is enabled.', 'info');
       }
-    }, 1000); // Wait 1 second after scanner starts
+    }, 1000);
   }
 
-  /** Starts the barcode scanning session. */
-  function startScanner() {
-    if (isScanning || cameras.length === 0) return;
-    clearAllErrors();
-
-    if (!readerElement) {
-      updateErrorElement(scannerErrorElement, "Scanner display area not found.");
-      return;
-    }
-    scanner = new Html5Qrcode('reader');
-
-    // ADVANCED CONFIGURATION to improve 1D barcode scanning
+  // --- Improved Scanner Logic ---
+  function getOptimalScannerConfig() {
     const config = {
-      fps: 10,
-      qrbox: (viewfinderWidth, viewfinderHeight) => ({
-        width: viewfinderWidth * 0.9, // Make viewfinder slightly larger
-        height: Math.min(viewfinderHeight * 0.5, 250)
-      }),
+      fps: isMobile ? 5 : 10, // Lower FPS for mobile to reduce battery drain
+      qrbox: (viewfinderWidth, viewfinderHeight) => {
+        // Larger scanning area for mobile
+        const widthRatio = isMobile ? 0.95 : 0.9;
+        const heightRatio = isMobile ? 0.6 : 0.5;
+        return {
+          width: Math.min(viewfinderWidth * widthRatio, 400),
+          height: Math.min(viewfinderHeight * heightRatio, 300)
+        };
+      },
       formatsToSupport: [
         Html5QrcodeSupportedFormats.EAN_13,
         Html5QrcodeSupportedFormats.UPC_A,
         Html5QrcodeSupportedFormats.EAN_8,
         Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.CODE_128
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.CODE_93,
+        Html5QrcodeSupportedFormats.CODABAR
       ],
-      // Use advanced features for better performance
       experimentalFeatures: {
-        useBarCodeDetectorIfSupported: true // Use native browser API if available
+        useBarCodeDetectorIfSupported: true
       },
-      // Request higher resolution video for clearer barcodes
-      videoConstraints: {
-        width: {
-          min: 1280,
-          ideal: 1920
-        },
-        height: {
-          min: 720,
-          ideal: 1080
-        },
-        aspectRatio: 1.7777777778, // 16:9
-        facingMode: 'environment' // Prioritize back camera
-      }
+      // Mobile-optimized video constraints
+      videoConstraints: getMobileOptimizedConstraints()
     };
 
-    scanner.start({
-        deviceId: {
-          exact: cameras[currentCameraIndex].id
-        }
-      }, config, onScanSuccess, onScanFailure)
-      .then(() => {
-        isScanning = true;
-        updateScanStatus('Scanning...', 'scanning');
-        if (readerElement) readerElement.classList.add('active');
-        if (startScanBtn) startScanBtn.style.display = 'none';
-        if (stopScanBtn) stopScanBtn.style.display = 'inline-flex';
-        if (switchCameraBtn) switchCameraBtn.style.display = cameras.length > 1 ? 'inline-flex' : 'none';
-        if (enhanceScanBtn) enhanceScanBtn.style.display = 'inline-flex';
-        setupTapToFocus();
-      })
-      .catch(err => {
-        console.error("Failed to start scanner:", err);
-        if (err.name === 'NotAllowedError') {
-          updateErrorElement(scannerErrorElement, 'Camera access was denied. Please allow camera permissions in your browser settings.');
-        } else {
-          updateErrorElement(scannerErrorElement, `Failed to start scanner. This camera may not support the required resolution. Error: ${err.name}`);
-        }
-        updateScanStatus('Scanner failed', 'error');
-        isScanning = false;
-      });
+    return config;
   }
 
-  /** Stops the barcode scanning session. */
+  function getMobileOptimizedConstraints() {
+    if (isMobile) {
+      return {
+        width: { min: 640, ideal: 1280, max: 1920 },
+        height: { min: 480, ideal: 720, max: 1080 },
+        aspectRatio: { ideal: 16/9 },
+        facingMode: { ideal: 'environment' },
+        frameRate: { ideal: 15, max: 30 },
+        // Mobile-specific optimizations
+        focusMode: { ideal: 'continuous' },
+        exposureMode: { ideal: 'continuous' },
+        whiteBalanceMode: { ideal: 'continuous' }
+      };
+    } else {
+      return {
+        width: { min: 1280, ideal: 1920 },
+        height: { min: 720, ideal: 1080 },
+        aspectRatio: 1.7777777778,
+        facingMode: 'environment'
+      };
+    }
+  }
+
+  async function startScanner() {
+    if (isScanning || cameras.length === 0) return;
+    
+    clearAllErrors();
+    
+    if (!readerElement) {
+      updateErrorElement(scannerErrorElement, "Scanner display area not found.");
+      return;
+    }
+
+    // Clean up any existing scanner
+    if (scanner) {
+      try {
+        await scanner.clear();
+      } catch (e) {
+        console.warn('Error clearing previous scanner:', e);
+      }
+    }
+
+    scanner = new Html5Qrcode('reader');
+    const config = getOptimalScannerConfig();
+
+    try {
+      await scanner.start(
+        { deviceId: { exact: cameras[currentCameraIndex].id } },
+        config,
+        onScanSuccess,
+        onScanFailure
+      );
+
+      isScanning = true;
+      updateScanStatus('Scanning...', 'scanning');
+      
+      if (readerElement) readerElement.classList.add('active');
+      if (startScanBtn) startScanBtn.style.display = 'none';
+      if (stopScanBtn) stopScanBtn.style.display = 'inline-flex';
+      if (switchCameraBtn) switchCameraBtn.style.display = cameras.length > 1 ? 'inline-flex' : 'none';
+      if (enhanceScanBtn) enhanceScanBtn.style.display = 'inline-flex';
+      
+      setupTapToFocus();
+      
+      // Mobile-specific optimizations
+      if (isMobile) {
+        // Prevent screen from sleeping during scanning
+        if ('wakeLock' in navigator) {
+          try {
+            await navigator.wakeLock.request('screen');
+          } catch (e) {
+            console.warn('Wake lock failed:', e);
+          }
+        }
+        
+        // Add vibration feedback for mobile
+        showToast('Scanner started. Hold steady for best results.', 'info');
+      }
+      
+    } catch (err) {
+      console.error("Failed to start scanner:", err);
+      
+      if (err.name === 'NotAllowedError') {
+        updateErrorElement(scannerErrorElement, 'Camera access denied. Please allow camera permissions and try again.');
+      } else if (err.name === 'NotFoundError') {
+        updateErrorElement(scannerErrorElement, 'No camera found. Please check your camera connection.');
+      } else if (err.name === 'NotReadableError') {
+        updateErrorElement(scannerErrorElement, 'Camera is already in use by another application.');
+      } else if (err.name === 'OverconstrainedError') {
+        updateErrorElement(scannerErrorElement, 'Camera does not support the required settings. Trying with basic settings...');
+        // Retry with basic constraints
+        await retryWithBasicConstraints();
+      } else {
+        updateErrorElement(scannerErrorElement, `Scanner failed: ${err.message}`);
+      }
+      
+      updateScanStatus('Scanner failed', 'error');
+      isScanning = false;
+    }
+  }
+
+  async function retryWithBasicConstraints() {
+    try {
+      const basicConfig = {
+        fps: 5,
+        qrbox: { width: 250, height: 250 },
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.UPC_A
+        ]
+      };
+
+      await scanner.start(
+        { deviceId: { exact: cameras[currentCameraIndex].id } },
+        basicConfig,
+        onScanSuccess,
+        onScanFailure
+      );
+
+      isScanning = true;
+      updateScanStatus('Scanning (basic mode)...', 'scanning');
+      showToast('Scanner started in basic mode.', 'info');
+      
+    } catch (err) {
+      console.error("Basic scanner also failed:", err);
+      updateErrorElement(scannerErrorElement, 'Unable to start scanner. Please try refreshing the page.');
+    }
+  }
+
   async function stopScanner() {
     if (!scanner || !isScanning) return;
+    
     isScanning = false;
+    
     try {
       await scanner.stop();
+      await scanner.clear();
     } catch (err) {
-      console.error("Error stopping scanner:", err);
+      console.warn("Error stopping scanner:", err);
     } finally {
-      if (scanner) scanner.clear();
       scanner = null;
       updateScanStatus('Scan stopped', 'ready');
+      
       if (readerElement) readerElement.classList.remove('active');
       if (startScanBtn) startScanBtn.style.display = 'inline-flex';
       if (stopScanBtn) stopScanBtn.style.display = 'none';
@@ -533,30 +667,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /**
-   * Callback for successful camera scans.
-   * @param {string} decodedText - The decoded barcode string.
-   */
   function onScanSuccess(decodedText) {
     if (!isScanning) return;
+    
     console.log(`Raw barcode from camera: "${decodedText}"`);
+    
+    // Add haptic feedback for mobile
+    if (isMobile && navigator.vibrate) {
+      navigator.vibrate(100);
+    }
+    
     handleBarcodeSubmission(decodedText);
   }
 
-  /**
-   * Callback for camera scan failures.
-   * @param {Error} error - The error object.
-   */
   function onScanFailure(error) {
-    if (isScanning && !String(error).includes('NotFoundException')) {
-      // console.warn(`Scan error: ${error}`); // Keep for debugging if needed
+    // Only log non-routine errors
+    if (isScanning && !String(error).includes('NotFoundException') && !String(error).includes('No MultiFormat Readers')) {
+      console.warn(`Scan error: ${error}`);
     }
   }
 
-  /**
-   * Processes a valid EAN-13 barcode to find its origin and display info.
-   * @param {string} barcode - A 13-digit barcode string.
-   */
   async function processBarcode(barcode) {
     lastScannedBarcode = barcode;
     const prefix = barcode.slice(0, 3);
@@ -590,15 +720,14 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Could not determine origin for this barcode.', 'warning');
       updateScanStatus('Unknown origin', 'error');
     }
+    
     toggleLoadingOverlay(false);
   }
 
-  // --- Scanner Logic (Camera & File) ---
-
-  /** Initializes camera list using Html5Qrcode. */
+  // --- Improved Camera Initialization ---
   async function initializeCameras() {
     if (typeof Html5Qrcode === 'undefined') {
-      updateErrorElement(scannerErrorElement, "Scanner library not loaded. Please ensure html5-qrcode is included.");
+      updateErrorElement(scannerErrorElement, "Scanner library not loaded. Please refresh the page.");
       updateScanStatus('Scanner error', 'error');
       if (startScanBtn) startScanBtn.disabled = true;
       return;
@@ -621,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /** Switches to the next available camera. */
+  // --- Functions from old app.js ---
   async function switchCamera() {
     if (cameras.length < 2) return;
     await stopScanner();
@@ -630,7 +759,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(startScanner, 100);
   }
 
-  /** Handles the file input for uploading a barcode image. */
   async function handleFileInput(e) {
     if (e.target.files.length === 0) return;
     const imageFile = e.target.files[0];
@@ -639,6 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       if (isScanning) await stopScanner();
+      // Use existing scanner instance or create a new one
       if (!scanner) scanner = new Html5Qrcode('reader');
 
       const decodedText = await scanner.scanFile(imageFile, true);
@@ -652,22 +781,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- Manual Input ---
-
-  /** Clears the manual barcode input field and any associated errors. */
   function clearManualInput() {
     if (manualInput) manualInput.value = '';
     updateErrorElement(manualInputErrorElement, '');
   }
 
-  /** Clears all error messages on the UI. */
   function clearAllErrors() {
     updateErrorElement(scannerErrorElement, '');
     updateErrorElement(manualInputErrorElement, '');
     updateErrorElement(fileInputErrorElement, '');
   }
-
-  // --- Modals, History, and other UI logic ---
 
   function openModal(modal) {
     if (modal) modal.classList.add('active');
@@ -725,10 +848,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', (e) => {
         const barcodeToView = e.currentTarget.dataset.barcode;
         handleBarcodeSubmission(barcodeToView);
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     });
     scanHistoryList.querySelectorAll('.delete-scan-btn').forEach(btn => {
@@ -757,15 +877,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const jsonString = JSON.stringify(history, null, 2);
-    const blob = new Blob([jsonString], {
-      type: 'application/json'
-    });
+    const blob = new Blob([jsonString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `scan-history-${new Date().toISOString().slice(0,10)}.json`;
     document.body.appendChild(a);
-    a.click();
+a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     showToast('Scan history exported!', 'success');
@@ -779,11 +897,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: 'OriginScan Result',
-          text: shareText,
-          url: shareUrl
-        });
+        await navigator.share({ title: 'OriginScan Result', text: shareText, url: shareUrl });
       } catch (err) {
         console.error('Share failed:', err);
       }
@@ -803,9 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(reportForm.action, {
         method: reportForm.method,
         body: new FormData(reportForm),
-        headers: {
-          'Accept': 'application/json'
-        }
+        headers: { 'Accept': 'application/json' }
       });
       if (response.ok) {
         showToast('Report sent! Thank you.', 'success');
@@ -932,13 +1044,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Global error handler
     window.onerror = (message, source, lineno, colno, error) => {
-      console.error('Global error:', {
-        message,
-        source,
-        lineno,
-        colno,
-        error
-      });
+      console.error('Global error:', { message, source, lineno, colno, error });
       updateErrorElement(scannerErrorElement, `An unexpected error occurred. Please refresh the page.`);
     };
   }
@@ -947,21 +1053,4 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
   setupEventListeners();
 
-  // Handle report modal barcode pre-fill and clear on close (moved from duplicate DOMContentLoaded)
-  if (reportSuspiciousBtn && reportModal && reportBarcodeInput) {
-    reportSuspiciousBtn.addEventListener('click', function() {
-      // The `lastScannedBarcode` is already updated by `processBarcode`
-      reportBarcodeInput.value = lastScannedBarcode || '';
-      if (!lastScannedBarcode) {
-        reportBarcodeInput.placeholder = "No barcode detected";
-      }
-    });
-  }
-  if (closeReportModalBtn) {
-    closeReportModalBtn.addEventListener('click', function() {
-      reportBarcodeInput.value = '';
-      reportBarcodeInput.placeholder = "No barcode detected";
-    });
-  }
-
-});
+})
