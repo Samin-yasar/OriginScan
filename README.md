@@ -4,7 +4,7 @@
 
 OriginScan is a web-based utility that allows you to scan EAN-13 and UPC-A barcodes to instantly find out the country of origin. Using your device's camera, uploading an image, or entering the code manually, you can get detailed information including the country's flag, region, population, and currency, all displayed on an interactive map.
 
-[**View Live Demo**](https://samin-yasar.github.io/OriginScan/)
+[**View Live Demo**](https://originscan.samin-yasar.dev)
 
 ---
 
