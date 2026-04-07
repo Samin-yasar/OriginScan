@@ -1,0 +1,12 @@
+{
+  "name": "OriginScan",
+  "short_name": "OriginScan",
+  "description": "Discover the origin of products instantly by scanning EAN-13 and UPC-A barcodes.",
+  "id": "https://samin-yasar.dev/",
+  "start_url": "/",
+  "scope": "https://samin-yasar.dev/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#2563eb",
+  "lang": "en"
+}
