@@ -4,8 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OriginScan</title>
-    <link rel="manifest" href="/manifest.json">
+    <title>OriginScan — Barcode Product Origin Scanner</title>
+    <meta name="description" content="Instantly discover where products come from. Scan EAN-13, UPC-A, EAN-8 barcodes to look up food, cosmetic, and book origins for free.">
+    <!-- PWA -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="OriginScan">
+    <!-- Styles -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -15,6 +23,12 @@
 </head>
 
 <body>
+    <!-- Offline status banner — shown via JS when navigator.onLine is false -->
+    <div id="offline-banner" class="offline-banner" style="display:none;" role="status" aria-live="polite">
+        <i class="fas fa-wifi-slash"></i>
+        <span><strong>Offline mode</strong> &mdash; GS1 prefix lookup still works. Product details unavailable until reconnected.</span>
+    </div>
+
     <div id="reading-guide" class="reading-guide" style="display: none;"></div>
 
     <div class="bg-animation"></div>
@@ -85,8 +99,8 @@
                                 <div class="scan-line"></div>
                             </div>
                             <div class="scan-instructions">
-                                <i class="fas fa-barcode scan-icon"></i>
-                                <p>Position barcode within the frame</p>
+                                <i class="fas fa-qrcode scan-icon"></i>
+                                <p>Position barcode or QR code within the frame</p>
                             </div>
                         </div>
                     </div>
@@ -103,6 +117,16 @@
                         <button id="switch-camera" class="btn btn-outline" style="display: none;">
                             <i class="fas fa-sync-alt"></i>
                             <span>Switch Camera</span>
+                        </button>
+                        <!-- Torch button: only shown when camera hardware supports it -->
+                        <button id="toggle-torch" class="btn btn-outline" style="display: none;" title="Toggle flashlight" aria-pressed="false">
+                            <i class="fas fa-bolt"></i>
+                            <span>Torch</span>
+                        </button>
+                        <!-- Zoom button: only shown when camera hardware supports optical/digital zoom -->
+                        <button id="toggle-zoom" class="btn btn-outline" style="display: none;" title="Toggle 1x/2x camera zoom" aria-label="Toggle camera zoom">
+                            <i class="fas fa-search-plus"></i>
+                            <span>1x</span>
                         </button>
                     </div>
                 </div>
@@ -158,11 +182,23 @@
                     </div>
 
                     <div id="country-result" class="country-result" style="display: none;">
+
+                        <!-- Checksum warning — shown when Mod-10 validation fails -->
+                        <div id="checksum-warning" class="checksum-warning" style="display:none;" role="alert"></div>
+
+                        <!-- GS1 note — shown for special/restricted prefix types -->
+                        <div id="gs1-note" class="gs1-note" style="display:none;"></div>
+
                         <div class="country-header">
                             <div class="country-flag" id="country-flag"></div>
                             <div class="country-details">
+                                <!-- GS1 Registration Country -->
                                 <h3 id="country-name"></h3>
                                 <p id="country-code"></p>
+                                <!-- Small disclaimer label so users understand what "origin" means here -->
+                                <span class="origin-label">
+                                    <i class="fas fa-tag"></i> GS1 Registration Country
+                                </span>
                             </div>
                             <div class="confidence-badge" id="confidence-badge">
                                 <span class="confidence-label">Confidence</span>
@@ -182,6 +218,33 @@
                             <div class="stat-row">
                                 <span class="stat-label">Currency:</span>
                                 <span class="stat-value" id="country-currency"></span>
+                            </div>
+                        </div>
+
+                        <!-- Multi-country breakdown — shown for shared GS1 prefixes like Belgium & Luxembourg -->
+                        <div id="multi-country-section" class="multi-country-section" style="display: none;">
+                            <div class="multi-country-header">
+                                <span class="multi-country-badge">
+                                    <i class="fas fa-layer-group"></i> Shared GS1 Prefix
+                                </span>
+                                <span class="multi-country-hint">Both nations share this prefix block. Click a nation to focus on map.</span>
+                            </div>
+                            <div id="multi-country-cards" class="multi-country-cards"></div>
+                        </div>
+
+                        <!-- Product preview panel — populated from Open Food Facts (online only) -->
+                        <div id="product-preview" class="product-preview" style="display:none;">
+                            <div class="product-preview-inner">
+                                <img id="product-image" class="product-thumb" src="" alt="Product image" style="display:none;">
+                                <div class="product-meta">
+                                    <span class="product-brand" id="product-brand-display"></span>
+                                    <span class="product-name" id="product-name-display"></span>
+                                    <!-- Declared physical manufacturing origin (from product label) -->
+                                    <span id="product-origin-badge" class="product-origin-badge" style="display:none;"></span>
+                                    <a id="product-off-link" class="product-off-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">
+                                        <i class="fas fa-external-link-alt"></i> View on Open Food Facts
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -478,5 +541,16 @@
 
         <script type="module" src="countries.js"></script>
         <script type="module" src="app.js"></script>
-</body>
+
+        <!-- Service Worker registration (non-blocking, module scope) -->
+        <script>
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+              navigator.serviceWorker.register('./sw.js', { scope: './' })
+                .then(reg => console.log('[OriginScan] SW registered, scope:', reg.scope))
+                .catch(err => console.warn('[OriginScan] SW registration failed:', err));
+            });
+          }
+        </script>
+    </body>
 </html>

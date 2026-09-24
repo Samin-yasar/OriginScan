@@ -1,0 +1,26 @@
+{
+  "name": "origin-scan",
+  "version": "1.1.0",
+  "description": "Discover product origin instantly with a multi-tier GS1 barcode scanner & open product database.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/test-suite.js",
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "barcode",
+    "gs1",
+    "ean-13",
+    "upc-a",
+    "origin",
+    "open-food-facts",
+    "scanner",
+    "vanilla-js"
+  ],
+  "author": "Samin Yasar (https://github.com/Samin-yasar)",
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/samin-yasar/OriginScan.git"
+  }
+}

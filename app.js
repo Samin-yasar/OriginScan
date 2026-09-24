@@ -15,7 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-import { getCountryByEANPrefix } from './countries.js';
+import { lookup } from './js/core/engine.js';
+import { validateBarcode } from './js/core/validator.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -89,9 +90,66 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastScannedBarcode = null;
   let scanner = null;
   let map = null;
-  let currentCountryMarker = null;
+  let currentCountryMarkers = []; // Array of active Leaflet markers
+  const countryMarkerMap = new Map(); // Mapping from country name -> Leaflet marker
   let scanTimeout = null; // For debouncing scans
   let lastSuccessfulScan = null; // To prevent duplicate scans
+
+  // Torch / flashlight & camera zoom state
+  let isTorchOn = false;
+  let activeCameraTrack = null; // MediaStreamTrack for torch/zoom control
+  let currentZoom = 1;
+  let minZoom = 1;
+  let maxZoom = 1;
+  let initialPinchDistance = null;
+  let initialZoomOnPinch = 1;
+
+  // Web Audio context — created on first use (must be after a user gesture on iOS)
+  let _audioCtx = null;
+  function _getAudioCtx() {
+    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return _audioCtx;
+  }
+
+  /**
+   * Plays a two-tone confirmation chime synthesized entirely by the Web Audio API.
+   * No audio files needed, zero network cost, and a pleasant 80ms sound.
+   */
+  function playBeep() {
+    try {
+      const ctx  = _getAudioCtx();
+      const now  = ctx.currentTime;
+
+      // First tone: short high ping (1760 Hz — musical A6)
+      const osc1  = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.type            = 'sine';
+      osc1.frequency.value = 1760;
+      gain1.gain.setValueAtTime(0.35, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc1.start(now);
+      osc1.stop(now + 0.08);
+
+      // Second tone: slightly lower follow-through (2093 Hz — C7) with slight delay
+      const osc2  = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.type            = 'sine';
+      osc2.frequency.value = 2093;
+      gain2.gain.setValueAtTime(0, now + 0.06);
+      gain2.gain.setValueAtTime(0.25, now + 0.065);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+      osc2.start(now + 0.06);
+      osc2.stop(now + 0.17);
+
+    } catch (err) {
+      // Silently degrade on unsupported or restricted browsers
+      console.warn('[OriginScan] Audio beep failed:', err.message);
+    }
+  }
 
   // --- Accessibility Constants ---
   const FONT_STEP = 1;
@@ -113,7 +171,21 @@ document.addEventListener('DOMContentLoaded', () => {
     resetProductOriginDisplay();
     initializeMap();
     handleUrlParameters();
-    
+
+    // Show/hide the offline banner based on live connectivity
+    const offlineBanner = document.getElementById('offline-banner');
+    function updateOfflineBanner() {
+      if (!offlineBanner) return;
+      if (navigator.onLine) {
+        offlineBanner.style.display = 'none';
+      } else {
+        offlineBanner.style.display = 'flex';
+      }
+    }
+    updateOfflineBanner(); // check on load
+    window.addEventListener('online',  updateOfflineBanner);
+    window.addEventListener('offline', updateOfflineBanner);
+
     // Mobile-specific initialization
     if (isMobile) {
       optimizeForMobile();
@@ -299,25 +371,214 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function displayProductOrigin(country, barcode, population, confidence) {
+  function displayScanResult(result) {
     if (placeholderState) placeholderState.style.display = 'none';
     if (countryResultDisplay) countryResultDisplay.style.display = 'block';
     if (shareResultBtn) shareResultBtn.style.display = 'inline-flex';
 
-    countryFlagElement.textContent = country.flag;
-    countryNameElement.textContent = country.name;
-    countryCodeElement.textContent = `Prefix: ${barcode.slice(0, 3)}`;
-    confidenceValue.textContent = confidence;
-    countryRegionElement.textContent = country.region || 'N/A';
-    countryPopulationElement.textContent = population ? population.toLocaleString() : 'N/A';
-    countryCurrencyElement.textContent = country.currency || 'N/A';
+    const gs1 = result.gs1;
+    const product = result.product;
+    const countryDetails = result.countryDetails;
+    const barcode = result.cleanCode;
 
-    addScanToHistory({
-      barcode: barcode,
-      country: country.name,
-      flag: country.flag,
+    // ── GS1 registration country (always present) ──
+    countryFlagElement.textContent = gs1 ? gs1.flag : '❓';
+    countryNameElement.textContent = gs1 ? gs1.country : 'Unknown Origin';
+    countryCodeElement.textContent = `GS1 Prefix: ${barcode.slice(0, 3)} · ${result.format}`;
+
+    // ── Confidence badge ──
+    const pct = result.confidencePct;
+    if (confidenceValue) confidenceValue.textContent = `${pct}%`;
+    if (confidenceBadge) {
+      confidenceBadge.className = 'confidence-badge';
+      if (pct >= 80) confidenceBadge.classList.add('high');
+      else if (pct >= 50) confidenceBadge.classList.add('medium');
+      else confidenceBadge.classList.add('low');
+    }
+
+    // ── Checksum warning ──
+    const checksumWarning = document.getElementById('checksum-warning');
+    if (checksumWarning) {
+      if (!result.checksumOk) {
+        checksumWarning.textContent = result.error || 'Check digit mismatch — the barcode may be misread.';
+        checksumWarning.style.display = 'block';
+      } else {
+        checksumWarning.style.display = 'none';
+      }
+    }
+
+    // ── GS1 note (for special/restricted prefixes) ──
+    const gs1NoteEl = document.getElementById('gs1-note');
+    if (gs1NoteEl) {
+      if (gs1 && gs1.note) {
+        gs1NoteEl.textContent = gs1.note;
+        gs1NoteEl.style.display = 'block';
+      } else {
+        gs1NoteEl.style.display = 'none';
+      }
+    }
+
+    // ── Country stats (Tier 1/3) ──
+    countryRegionElement.textContent = gs1 ? gs1.region : 'N/A';
+    if (countryDetails) {
+      if (countryDetails.isMultiCountry && countryDetails.population) {
+        countryPopulationElement.textContent = `${countryDetails.population.toLocaleString()} (Joint)`;
+      } else {
+        countryPopulationElement.textContent = countryDetails.population
+          ? countryDetails.population.toLocaleString() : 'N/A';
+      }
+      countryCurrencyElement.textContent = countryDetails.currencies || (gs1 ? gs1.currency : 'N/A');
+    } else {
+      countryPopulationElement.textContent = 'N/A';
+      countryCurrencyElement.textContent = gs1 ? gs1.currency : 'N/A';
+    }
+
+    // ── Multi-country breakdown panel (for shared prefixes like Belgium & Luxembourg) ──
+    const multiCountrySection = document.getElementById('multi-country-section');
+    const multiCountryCards = document.getElementById('multi-country-cards');
+    if (multiCountrySection && multiCountryCards) {
+      const isMulti = (gs1 && gs1.countries && gs1.countries.length > 1);
+      if (isMulti) {
+        multiCountryCards.innerHTML = '';
+        const memberData = (countryDetails && countryDetails.members) ? countryDetails.members : gs1.countries;
+
+        memberData.forEach(member => {
+          const card = document.createElement('div');
+          card.className = 'multi-country-card';
+
+          const popStr = member.population ? member.population.toLocaleString() : 'N/A';
+          const capStr = member.capital || 'N/A';
+          const currStr = member.currencies || gs1.currency || 'EUR';
+
+          card.innerHTML = `
+            <div class="multi-country-card-header">
+              <span class="multi-country-card-flag">${member.flag}</span>
+              <span class="multi-country-card-name">${member.name}</span>
+            </div>
+            <div class="multi-country-card-meta">
+              <div><span class="label">Capital:</span> <span class="value">${capStr}</span></div>
+              <div><span class="label">Population:</span> <span class="value">${popStr}</span></div>
+              <div><span class="label">Currency:</span> <span class="value">${currStr}</span></div>
+            </div>
+            <button class="btn-country-map" data-country="${member.apiName || member.name}" title="Center ${member.name} on map">
+              <i class="fas fa-map-marker-alt"></i> View on Map
+            </button>
+          `;
+
+          const mapBtn = card.querySelector('.btn-country-map');
+          if (mapBtn) {
+            mapBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              focusCountryOnMap(member.apiName || member.name);
+            });
+          }
+
+          multiCountryCards.appendChild(card);
+        });
+
+        multiCountrySection.style.display = 'block';
+      } else {
+        multiCountrySection.style.display = 'none';
+      }
+    }
+
+    // ── Product metadata panel (Tier 2 — multi-database) ──
+    const productPanel = document.getElementById('product-preview');
+    if (productPanel) {
+      if (product && product.found) {
+        const productName = document.getElementById('product-name-display');
+        const productBrand = document.getElementById('product-brand-display');
+        const productImg = document.getElementById('product-image');
+        const productOriginBadge = document.getElementById('product-origin-badge');
+        const productLink = document.getElementById('product-off-link');
+
+        if (productName) productName.textContent = product.name || 'Name not available';
+
+        // Brand label — for books this is the publisher
+        if (productBrand) {
+          const brandText = product.author
+            ? `by ${product.author}`
+            : (product.brand || '');
+          productBrand.textContent = brandText;
+        }
+
+        if (productImg) {
+          if (product.imageUrl) {
+            productImg.src = product.imageUrl;
+            productImg.style.display = 'block';
+          } else {
+            productImg.style.display = 'none';
+          }
+        }
+
+        if (productOriginBadge) {
+          if (product.declaredOrigin) {
+            productOriginBadge.textContent = `🏭 Made in: ${product.declaredOrigin}`;
+            productOriginBadge.style.display = 'inline-block';
+          } else {
+            productOriginBadge.style.display = 'none';
+          }
+        }
+
+        // Source badge — coloured pill showing which database supplied the data
+        let sourceBadge = document.getElementById('product-source-badge');
+        if (!sourceBadge) {
+          sourceBadge = document.createElement('div');
+          sourceBadge.id = 'product-source-badge';
+          // Insert after the product brand element if available
+          if (productBrand && productBrand.parentNode) {
+            productBrand.parentNode.insertBefore(sourceBadge, productBrand.nextSibling);
+          }
+        }
+        if (sourceBadge && product.sourceLabel) {
+          sourceBadge.className = `product-source-badge src-${product.source}`;
+          sourceBadge.textContent = `Source: ${product.sourceLabel}`;
+          sourceBadge.style.display = 'inline-flex';
+        }
+
+        // Book-specific extra rows (author / publisher / year) — hidden for non-book products
+        let bookMeta = document.getElementById('product-book-meta');
+        if (product.source === 'openlibrary' && (product.publisher || product.publishedYear)) {
+          if (!bookMeta) {
+            bookMeta = document.createElement('div');
+            bookMeta.id = 'product-book-meta';
+            bookMeta.className = 'product-book-meta';
+            if (productPanel) productPanel.appendChild(bookMeta);
+          }
+          let rows = '';
+          if (product.publisher) rows += `<span><strong>Publisher:</strong> ${product.publisher}</span>`;
+          if (product.publishedYear) rows += `<span><strong>Year:</strong> ${product.publishedYear}</span>`;
+          bookMeta.innerHTML = rows;
+          bookMeta.style.display = 'flex';
+        } else if (bookMeta) {
+          bookMeta.style.display = 'none';
+        }
+
+        // Database link
+        if (productLink && product.productUrl) {
+          productLink.href = product.productUrl;
+          productLink.title = `View on ${product.sourceLabel}`;
+          productLink.style.display = 'inline-flex';
+        } else if (productLink) {
+          productLink.style.display = 'none';
+        }
+
+        productPanel.style.display = 'block';
+      } else {
+        productPanel.style.display = 'none';
+      }
+    }
+
+    // ── Save to history ──
+    const historyEntry = {
+      barcode,
+      country: gs1 ? gs1.country : 'Unknown',
+      flag: gs1 ? gs1.flag : '❓',
+      productName: product && product.found ? product.name : null,
+      confidence: result.confidence,
       timestamp: new Date().toLocaleString()
-    });
+    };
+    addScanToHistory(historyEntry);
   }
 
   function resetProductOriginDisplay() {
@@ -351,27 +612,89 @@ document.addEventListener('DOMContentLoaded', () => {
     new ResizeObserver(() => map && map.invalidateSize()).observe(mapElement);
   }
 
-  async function showMapLocation(countryApiName) {
+  function _clearMapMarkers() {
     if (!map) return;
-    if (currentCountryMarker) map.removeLayer(currentCountryMarker);
-    
-    if (countryApiName === 'World' || countryApiName === 'Unknown') {
+    currentCountryMarkers.forEach(m => {
+      try { map.removeLayer(m); } catch (e) { /* ignore */ }
+    });
+    currentCountryMarkers = [];
+    countryMarkerMap.clear();
+  }
+
+  async function showMapLocation(countryApiName, memberCountries = null, preferredCoords = null) {
+    if (!map) return;
+    _clearMapMarkers();
+
+    if ((!countryApiName || countryApiName === 'World' || countryApiName === 'Unknown') && (!memberCountries || memberCountries.length === 0)) {
       map.setView([20, 0], 2);
       return;
     }
 
     toggleLoadingOverlay(true);
-    const countryCoords = await getCountryCoordinates(countryApiName);
-    toggleLoadingOverlay(false);
 
-    if (countryCoords) {
-      currentCountryMarker = L.marker(countryCoords).addTo(map)
-        .bindPopup(`<b>${countryApiName}</b>`).openPopup();
-      map.setView(countryCoords, 5);
-      showToast(`Map updated for ${countryApiName}`, 'info');
-    } else {
-      map.setView([20, 0], 2);
-      showToast(`Could not find map location for ${countryApiName}.`, 'warning');
+    try {
+      if (memberCountries && memberCountries.length > 1) {
+        // Multi-country / joint prefix (e.g. Belgium & Luxembourg)
+        const coordsList = await Promise.all(
+          memberCountries.map(async (m) => {
+            let coords = (m.latlng && m.latlng.length === 2) ? m.latlng : null;
+            if (!coords) {
+              coords = await getCountryCoordinates(m.apiName || m.name);
+            }
+            return { ...m, coords };
+          })
+        );
+
+        const validMembers = coordsList.filter(item => item.coords);
+
+        if (validMembers.length > 0) {
+          validMembers.forEach(item => {
+            const marker = L.marker(item.coords).addTo(map);
+            const popInfo = item.population ? `<br>Population: ${item.population.toLocaleString()}` : '';
+            const capInfo = item.capital ? `<br>Capital: ${item.capital}` : '';
+            marker.bindPopup(`<b>${item.flag || ''} ${item.name}</b>${capInfo}${popInfo}<br><small style="color:var(--primary)">GS1 Shared Prefix Member</small>`);
+
+            currentCountryMarkers.push(marker);
+            countryMarkerMap.set(item.name, marker);
+            if (item.apiName) countryMarkerMap.set(item.apiName, marker);
+          });
+
+          const group = L.featureGroup(currentCountryMarkers);
+          map.fitBounds(group.getBounds().pad(0.35));
+          showToast(`Map updated for ${validMembers.map(m => m.name).join(' & ')}`, 'info');
+        } else {
+          map.setView([20, 0], 2);
+          showToast('Could not find map locations for member countries.', 'warning');
+        }
+      } else {
+        // Single country
+        const countryCoords = (preferredCoords && preferredCoords.length === 2)
+          ? preferredCoords
+          : await getCountryCoordinates(countryApiName);
+        if (countryCoords) {
+          const marker = L.marker(countryCoords).addTo(map)
+            .bindPopup(`<b>${countryApiName}</b>`).openPopup();
+          currentCountryMarkers.push(marker);
+          countryMarkerMap.set(countryApiName, marker);
+          map.setView(countryCoords, 5);
+          showToast(`Map updated for ${countryApiName}`, 'info');
+        } else {
+          map.setView([20, 0], 2);
+          showToast(`Could not find map location for ${countryApiName}.`, 'warning');
+        }
+      }
+    } finally {
+      toggleLoadingOverlay(false);
+    }
+  }
+
+  function focusCountryOnMap(countryName) {
+    if (!map) return;
+    const marker = countryMarkerMap.get(countryName);
+    if (marker) {
+      map.flyTo(marker.getLatLng(), 6, { duration: 1.2 });
+      setTimeout(() => marker.openPopup(), 1200);
+      showToast(`Focused map on ${countryName}`, 'info');
     }
   }
 
@@ -390,22 +713,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
-  async function getCountryPopulation(countryApiName) {
-    if (!countryApiName || countryApiName === "Unknown") return null;
-    
-    try {
-      const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(countryApiName)}?fields=population`, {
-        headers: { 'User-Agent': 'OriginScan/1.2' }
-      });
-      if (!response.ok) return null;
-      const data = await response.json();
-      return (data && data.length > 0) ? data[0].population : null;
-    } catch (error) {
-      console.error(`Failed to fetch population for ${countryApiName}:`, error);
-      return null;
-    }
-  }
-
   // --- Core Barcode Logic ---
   async function handleBarcodeSubmission(barcodeValue) {
     clearAllErrors();
@@ -415,19 +722,15 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    let cleanBarcode = barcodeValue.trim().replace(/\D/g, '');
-
-    if (cleanBarcode.length === 12) {
-      cleanBarcode = '0' + cleanBarcode;
-      console.log(`UPC-A detected. Padded to EAN-13: ${cleanBarcode}`);
-    }
-
-    if (cleanBarcode.length !== 13) {
-      const errorMsg = 'Enter a valid 13-digit (EAN-13) or 12-digit (UPC-A) barcode.';
+    const validation = validateBarcode(barcodeValue);
+    if (!validation.isValid && validation.format === 'Unknown') {
+      const errorMsg = validation.error || 'Enter a valid barcode (EAN-13, UPC-A, EAN-8) or scan a product QR/barcode.';
       updateErrorElement(isScanning ? scannerErrorElement : manualInputErrorElement, errorMsg);
-      showToast('Invalid barcode length.', 'error');
+      showToast(errorMsg, 'error');
       return;
     }
+
+    const cleanBarcode = validation.cleanCode;
 
     // Prevent duplicate scans within 3 seconds
     if (lastSuccessfulScan === cleanBarcode && scanTimeout) {
@@ -486,17 +789,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Improved Scanner Logic ---
   function getOptimalScannerConfig() {
     const config = {
-      fps: isMobile ? 5 : 10, // Lower FPS for mobile to reduce battery drain
+      fps: 15, // 15 FPS ensures smooth capture on mobile without motion blur
       qrbox: (viewfinderWidth, viewfinderHeight) => {
-        // Larger scanning area for mobile
-        const widthRatio = isMobile ? 0.95 : 0.9;
-        const heightRatio = isMobile ? 0.6 : 0.5;
+        // Adaptive box that handles both wide 1D barcodes and square 2D codes (QR/DataMatrix)
+        const minDim = Math.min(viewfinderWidth, viewfinderHeight);
+        const boxSize = Math.max(220, Math.min(Math.floor(minDim * 0.75), 340));
         return {
-          width: Math.min(viewfinderWidth * widthRatio, 400),
-          height: Math.min(viewfinderHeight * heightRatio, 300)
+          width: Math.min(viewfinderWidth * 0.9, Math.max(boxSize, 260)),
+          height: boxSize
         };
       },
       formatsToSupport: [
+        // 1D Linear Barcodes
         Html5QrcodeSupportedFormats.EAN_13,
         Html5QrcodeSupportedFormats.UPC_A,
         Html5QrcodeSupportedFormats.EAN_8,
@@ -504,11 +808,17 @@ document.addEventListener('DOMContentLoaded', () => {
         Html5QrcodeSupportedFormats.CODE_128,
         Html5QrcodeSupportedFormats.CODE_39,
         Html5QrcodeSupportedFormats.CODE_93,
-        Html5QrcodeSupportedFormats.CODABAR
+        Html5QrcodeSupportedFormats.CODABAR,
+        // 2D Matrix / Modern Packaging Barcodes
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.DATA_MATRIX,
+        Html5QrcodeSupportedFormats.AZTEC,
+        Html5QrcodeSupportedFormats.PDF_417
       ],
       experimentalFeatures: {
         useBarCodeDetectorIfSupported: true
       },
+      disableFlip: false,
       // Mobile-optimized video constraints
       videoConstraints: getMobileOptimizedConstraints()
     };
@@ -577,9 +887,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (stopScanBtn) stopScanBtn.style.display = 'inline-flex';
       if (switchCameraBtn) switchCameraBtn.style.display = cameras.length > 1 ? 'inline-flex' : 'none';
       if (enhanceScanBtn) enhanceScanBtn.style.display = 'inline-flex';
-      
+
       setupTapToFocus();
-      
+
+      // Detect camera hardware support (torch, zoom, autofocus)
+      setTimeout(_detectCameraHardwareSupport, 500);
+
       // Mobile-specific optimizations
       if (isMobile) {
         // Prevent screen from sleeping during scanning
@@ -620,11 +933,14 @@ document.addEventListener('DOMContentLoaded', () => {
   async function retryWithBasicConstraints() {
     try {
       const basicConfig = {
-        fps: 5,
+        fps: 10,
         qrbox: { width: 250, height: 250 },
         formatsToSupport: [
           Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.UPC_A
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.QR_CODE,
+          Html5QrcodeSupportedFormats.DATA_MATRIX
         ]
       };
 
@@ -664,19 +980,26 @@ document.addEventListener('DOMContentLoaded', () => {
       if (stopScanBtn) stopScanBtn.style.display = 'none';
       if (switchCameraBtn) switchCameraBtn.style.display = 'none';
       if (enhanceScanBtn) enhanceScanBtn.style.display = 'none';
+
+      // Reset hardware constraints when scanner stops
+      _resetTorch();
+      _resetZoom();
     }
   }
 
   function onScanSuccess(decodedText) {
     if (!isScanning) return;
-    
+
     console.log(`Raw barcode from camera: "${decodedText}"`);
-    
-    // Add haptic feedback for mobile
-    if (isMobile && navigator.vibrate) {
-      navigator.vibrate(100);
+
+    // Distinct double-pulse haptic: two quick bursts with a 30ms gap
+    if (navigator.vibrate) {
+      navigator.vibrate([40, 30, 40]);
     }
-    
+
+    // Synthesized audio confirmation chime
+    playBeep();
+
     handleBarcodeSubmission(decodedText);
   }
 
@@ -689,39 +1012,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function processBarcode(barcode) {
     lastScannedBarcode = barcode;
-    const prefix = barcode.slice(0, 3);
-    console.log(`Processing EAN-13 prefix: "${prefix}"`);
+    console.log(`[OriginScan] Processing barcode: "${barcode}"`);
 
     toggleLoadingOverlay(true);
-    const country = getCountryByEANPrefix(prefix);
-    let confidence = '0%';
-    let population = null;
 
-    if (country && country.name !== "Unknown Origin") {
-      confidence = '99%';
-      const apiName = country.apiLookupName || country.name.split(' (')[0];
-      population = await getCountryPopulation(apiName);
-      displayProductOrigin(country, barcode, population, confidence);
-      await showMapLocation(apiName);
+    try {
+      const result = await lookup(barcode, { fetchProduct: true });
 
-      scanCount++;
-      localStorage.setItem('scanCount', scanCount);
-      updateScanCountUI();
-      showToast(`Scanned: ${country.name}`, 'success');
-      updateScanStatus('Scan successful', 'ready');
-    } else {
-      const unknownCountry = {
-        name: "Unknown Origin",
-        flag: "❓",
-        region: "N/A",
-        currency: "N/A"
-      };
-      displayProductOrigin(unknownCountry, barcode, null, '0%');
-      showToast('Could not determine origin for this barcode.', 'warning');
-      updateScanStatus('Unknown origin', 'error');
+      displayScanResult(result);
+
+      // Update map using GS1 country name (or member nations if shared prefix)
+      if (result.gs1 && result.gs1.countries && result.gs1.countries.length > 1) {
+        const members = result.countryDetails?.members || result.gs1.countries;
+        await showMapLocation(null, members);
+      } else if (result.gs1 && result.gs1.apiName) {
+        await showMapLocation(result.gs1.apiName, null, result.countryDetails?.latlng || null);
+      } else {
+        showMapLocation('World');
+      }
+
+      if (result.gs1 && result.gs1.found && result.gs1.type === 'country') {
+        scanCount++;
+        localStorage.setItem('scanCount', scanCount);
+        updateScanCountUI();
+        const productLabel = result.product && result.product.name ? ` — ${result.product.name}` : '';
+        showToast(`Scanned: ${result.gs1.country}${productLabel}`, 'success');
+        updateScanStatus('Scan successful', 'ready');
+      } else if (result.gs1 && result.gs1.found) {
+        scanCount++;
+        localStorage.setItem('scanCount', scanCount);
+        updateScanCountUI();
+        showToast(`Scanned: ${result.gs1.country}`, 'info');
+        updateScanStatus('Scan complete', 'ready');
+      } else {
+        showToast('Could not determine origin for this barcode.', 'warning');
+        updateScanStatus('Unknown origin', 'error');
+      }
+
+      // Surface checksum warnings as toasts too
+      if (!result.checksumOk) {
+        showToast('⚠️ Check digit mismatch — the barcode may be misread.', 'warning');
+      }
+    } catch (err) {
+      console.error('[OriginScan] processBarcode error:', err);
+      showToast('An error occurred during lookup. Please try again.', 'error');
+      updateScanStatus('Lookup error', 'error');
+    } finally {
+      toggleLoadingOverlay(false);
     }
-    
-    toggleLoadingOverlay(false);
   }
 
   // --- Improved Camera Initialization ---
@@ -753,10 +1091,187 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Functions from old app.js ---
   async function switchCamera() {
     if (cameras.length < 2) return;
+    _resetTorch(); // kill torch before switching streams
+    _resetZoom();
     await stopScanner();
     currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
     showToast(`Switching to ${cameras[currentCameraIndex].label || `camera ${currentCameraIndex + 1}`}`, 'info');
     setTimeout(startScanner, 100);
+  }
+
+  // ── Camera Hardware Helpers (Torch, Zoom, Autofocus) ────────────────────
+
+  /**
+   * After the scanner starts, grab the active video track and check whether
+   * the hardware advertises torch or zoom support.
+   */
+  function _detectCameraHardwareSupport() {
+    const torchBtn = document.getElementById('toggle-torch');
+    const zoomBtn = document.getElementById('toggle-zoom');
+
+    try {
+      const video = readerElement ? readerElement.querySelector('video') : null;
+      if (!video || !video.srcObject) return;
+
+      const [track] = video.srcObject.getVideoTracks();
+      activeCameraTrack = track || null;
+
+      if (!activeCameraTrack) return;
+
+      const capabilities = activeCameraTrack.getCapabilities ? activeCameraTrack.getCapabilities() : {};
+
+      // Torch detection
+      if (torchBtn) {
+        if (capabilities.torch) {
+          torchBtn.style.display = 'inline-flex';
+          torchBtn.setAttribute('aria-pressed', 'false');
+          torchBtn.classList.remove('torch-active');
+        } else {
+          torchBtn.style.display = 'none';
+        }
+      }
+
+      // Optical / Digital Zoom detection
+      if (zoomBtn) {
+        if (capabilities.zoom && capabilities.zoom.max > capabilities.zoom.min) {
+          minZoom = capabilities.zoom.min || 1;
+          maxZoom = capabilities.zoom.max || 1;
+          currentZoom = minZoom;
+          zoomBtn.style.display = 'inline-flex';
+          zoomBtn.querySelector('span').textContent = `${minZoom}x`;
+          zoomBtn.classList.remove('zoom-active');
+
+          // Attach pinch-to-zoom touch gesture on the viewfinder
+          _setupPinchToZoom(video, activeCameraTrack, capabilities);
+        } else {
+          zoomBtn.style.display = 'none';
+        }
+      }
+    } catch (err) {
+      console.warn('[OriginScan] Hardware capability detection failed:', err.message);
+    }
+  }
+
+  // Alias for backwards compatibility
+  const _detectTorchSupport = _detectCameraHardwareSupport;
+
+  /**
+   * Toggles the physical torch on/off via the MediaStreamTrack constraints API.
+   */
+  async function toggleTorch() {
+    const torchBtn = document.getElementById('toggle-torch');
+    if (!activeCameraTrack) return;
+
+    try {
+      isTorchOn = !isTorchOn;
+      await activeCameraTrack.applyConstraints({ advanced: [{ torch: isTorchOn }] });
+
+      if (torchBtn) {
+        torchBtn.classList.toggle('torch-active', isTorchOn);
+        torchBtn.setAttribute('aria-pressed', String(isTorchOn));
+        torchBtn.querySelector('span').textContent = isTorchOn ? 'Torch On' : 'Torch';
+      }
+      showToast(isTorchOn ? 'Flashlight on' : 'Flashlight off', 'info');
+    } catch (err) {
+      console.warn('[OriginScan] Could not toggle torch:', err.message);
+      showToast('Torch not supported on this device.', 'warning');
+      isTorchOn = false;
+    }
+  }
+
+  /**
+   * Turns the torch off and hides the button.
+   */
+  function _resetTorch() {
+    isTorchOn = false;
+    const torchBtn = document.getElementById('toggle-torch');
+    if (torchBtn) {
+      torchBtn.style.display = 'none';
+      torchBtn.classList.remove('torch-active');
+      torchBtn.setAttribute('aria-pressed', 'false');
+      torchBtn.querySelector('span').textContent = 'Torch';
+    }
+  }
+
+  /**
+   * Applies a specific zoom level to the active camera track.
+   */
+  async function _applyZoom(targetZoom) {
+    if (!activeCameraTrack || maxZoom <= minZoom) return;
+    try {
+      const clamped = Math.min(maxZoom, Math.max(minZoom, targetZoom));
+      await activeCameraTrack.applyConstraints({ advanced: [{ zoom: clamped }] });
+      currentZoom = clamped;
+      const zoomBtn = document.getElementById('toggle-zoom');
+      if (zoomBtn) {
+        const displayZoom = clamped.toFixed(1).replace(/\.0$/, '');
+        zoomBtn.querySelector('span').textContent = `${displayZoom}x`;
+        zoomBtn.classList.toggle('zoom-active', clamped > minZoom);
+      }
+    } catch (err) {
+      console.warn('[OriginScan] Zoom constraint failed:', err.message);
+    }
+  }
+
+  /**
+   * Toggles between 1x (minZoom) and 2x (or maximum zoom).
+   * Allows mobile users to stay at optimal focal distance (~15-20cm) while enlarging barcodes.
+   */
+  async function toggleZoom() {
+    if (!activeCameraTrack || maxZoom <= minZoom) return;
+    const target2x = Math.min(2.0, maxZoom);
+    const nextZoom = (currentZoom >= target2x) ? minZoom : target2x;
+    await _applyZoom(nextZoom);
+    const label = nextZoom.toFixed(1).replace(/\.0$/, '');
+    showToast(`Camera zoom set to ${label}x`, 'info');
+  }
+
+  /**
+   * Resets zoom state when scanner stops or camera switches.
+   */
+  function _resetZoom() {
+    currentZoom = 1;
+    minZoom = 1;
+    maxZoom = 1;
+    const zoomBtn = document.getElementById('toggle-zoom');
+    if (zoomBtn) {
+      zoomBtn.style.display = 'none';
+      zoomBtn.classList.remove('zoom-active');
+      zoomBtn.querySelector('span').textContent = '1x';
+    }
+  }
+
+  /**
+   * Enables pinch-to-zoom gesture on the camera viewfinder element.
+   */
+  function _setupPinchToZoom(video, track, capabilities) {
+    if (!readerElement) return;
+
+    readerElement.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        initialPinchDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialZoomOnPinch = currentZoom;
+      }
+    }, { passive: true });
+
+    readerElement.addEventListener('touchmove', async (e) => {
+      if (e.touches.length === 2 && initialPinchDistance) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const scale = dist / initialPinchDistance;
+        const newZoom = Math.min(maxZoom, Math.max(minZoom, initialZoomOnPinch * scale));
+        await _applyZoom(newZoom);
+      }
+    }, { passive: true });
+
+    readerElement.addEventListener('touchend', () => {
+      initialPinchDistance = null;
+    }, { passive: true });
   }
 
   async function handleFileInput(e) {
@@ -998,6 +1513,28 @@ a.click();
     updateUIForAccessibility();
   }
 
+  // --- Clipboard Paste Handler ---
+  // Lets desktop users paste a barcode number directly with Cmd+V / Ctrl+V.
+  // If the pasted content looks like a barcode (all digits, right length), we
+  // populate the manual input and trigger a lookup automatically.
+  function setupPasteHandler() {
+    document.addEventListener('paste', (e) => {
+      // Don't interfere if the user is pasting into the manual input itself
+      if (document.activeElement === manualInput) return;
+
+      const text = (e.clipboardData || window.clipboardData).getData('text');
+      if (!text) return;
+
+      const digits = text.trim().replace(/\D/g, '');
+      if (digits.length >= 8 && digits.length <= 14) {
+        e.preventDefault();
+        if (manualInput) manualInput.value = digits;
+        handleBarcodeSubmission(digits);
+        showToast('Barcode pasted from clipboard!', 'info');
+      }
+    });
+  }
+
   // --- Event Listeners Setup ---
   function setupEventListeners() {
     // Scanner
@@ -1007,6 +1544,14 @@ a.click();
     if (importFromFileBtn) importFromFileBtn.addEventListener('click', () => barcodeFileInput.click());
     if (barcodeFileInput) barcodeFileInput.addEventListener('change', handleFileInput);
     if (enhanceScanBtn) enhanceScanBtn.addEventListener('click', handleEnhanceAndScan);
+
+    // Torch toggle — button is only shown when hardware supports it
+    const torchBtn = document.getElementById('toggle-torch');
+    if (torchBtn) torchBtn.addEventListener('click', toggleTorch);
+
+    // Zoom toggle — button is only shown when camera hardware supports zoom
+    const zoomBtn = document.getElementById('toggle-zoom');
+    if (zoomBtn) zoomBtn.addEventListener('click', toggleZoom);
 
     // Manual Input
     if (checkManualBtn) checkManualBtn.addEventListener('click', () => handleBarcodeSubmission(manualInput.value));
@@ -1052,5 +1597,6 @@ a.click();
   // --- App Entry Point ---
   initializeApp();
   setupEventListeners();
+  setupPasteHandler();
 
 })

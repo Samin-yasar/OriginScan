@@ -1,122 +1,153 @@
 # OriginScan 🌍
 
-**Discover the origin of products instantly with a powerful and accessible barcode scanner.**
+**Discover the origin of products instantly with a powerful, developer-friendly, and open-source barcode scanner.**
 
-OriginScan is a web-based utility that allows you to scan EAN-13 and UPC-A barcodes to instantly find out the country of origin. Using your device's camera, uploading an image, or entering the code manually, you can get detailed information including the country's flag, region, population, and currency, all displayed on an interactive map.
+OriginScan is a client-side web utility that scans EAN-13, UPC-A, UPC-E, and EAN-8 barcodes to determine their country of origin and product details. Combining a comprehensive offline **GS1 prefix registry** with free, community-driven APIs like **Open Food Facts**, OriginScan can distinguish between where a barcode was *registered* and where a product was actually *manufactured*.
 
-[**View Live Demo**](https://originscan.samin-yasar.dev)
+[**View Live Demo**](https://originscan.samin-yasar.dev) · [**Report a Bug**](https://github.com/Samin-yasar/OriginScan/issues) · [**Contributing Guide**](CONTRIBUTING.md)
+
+---
+
+## What Makes OriginScan Different?
+
+Most barcode tools naively match 3 digits and claim "Made in France" — even if the product was manufactured elsewhere and only registered by a French parent company.
+
+OriginScan solves this with a **Multi-Tier Resolution Engine**:
+1. **Format Validation & Mod-10 Checksum**: Verifies the barcode's GS1 Mod-10 check digit and diagnoses typos before making any queries.
+2. **Offline GS1 Registry**: Maps over 150 prefix blocks with support for 2-digit, 3-digit, and 4-digit prefixes, special ranges (ISBN, ISSN, coupons), and restricted in-store barcodes.
+3. **Open Product Database (Tier 2)**: Queries the public Open Food Facts crowd-sourced database (with local in-memory LRU caching) to fetch actual product names, brands, images, and **declared manufacturing origins**.
+4. **Dual Origin Transparency**: Displays both the GS1 registration origin and the physical manufacturing origin side-by-side with clear confidence indicators.
 
 ---
 
 ## Features
 
 * **Multi-Input Scanning**:
-    * **Live Camera Scan**: Use your device's camera for real-time barcode detection.
-    * **File Upload**: Scan a barcode from an existing image (JPG, PNG).
-    * **Manual Entry**: Type in the barcode number directly.
-* **Instant Origin Lookup**: Identifies the GS1 prefix to determine the country or economic region where the barcode was registered.
-* **Rich Country Data**: Fetches and displays additional details:
-    * Official country name and flag.
-    * Geographical region.
-    * Real-time population data (via REST Countries API).
-    * Primary currency.
-* **Interactive Map**: Visualizes the product's country of origin on a dynamic map (powered by Leaflet.js and OpenStreetMap).
-* **Scan History**: Automatically saves your last 20 scans in local storage for quick reference. You can view details or delete entries.
-* **Data Export**: Export your entire scan history as a JSON file.
-* **Share Results**: Easily share scan results via the Web Share API or copy them to your clipboard.
+    * **Live Camera Scan**: Real-time detection using html5-qrcode with BarcodeDetector API acceleration where supported.
+    * **File Upload**: Scan barcodes directly from images (JPG, PNG).
+    * **Manual Entry & Paste**: Type or paste barcodes with automatic whitespace and dash stripping.
+* **Accuracy & Validation**:
+    * **GS1 Mod-10 Checksum Algorithm**: Instantly warns if a barcode is mistyped, tampered, or invalid, showing the expected check digit.
+    * **Format Support**: EAN-13, UPC-A (auto-normalised), UPC-E (zero-expansion algorithm), and EAN-8.
+* **Dual-Origin & Product Data**:
+    * **Product Preview**: Shows product title, brand, category, and photo when available.
+    * **Dual Origin Badges**: Explicitly contrasts "GS1 Registered Origin" vs. "Physical Manufacturing Origin".
+    * **Confidence Scoring**: Transparent rating (High / Medium / Low) based on data verification sources.
+* **Geographical & Economic Insights**:
+    * Official country name, flag, region, primary currency, and population data.
+    * Dynamic interactive map powered by Leaflet.js and OpenStreetMap.
+* **Zero Cost & Open Source**:
+    * No paid product APIs required — Open Food Facts and Open Library are used without credentials.
+    * Client-side LRU cache to minimize network calls and respect public API rate limits.
+* **Scan History & Export**:
+    * Local history storage (up to 20 scans) with JSON export.
 * **Full Accessibility Suite**:
-    * Dark/Light Mode Theme.
-    * Adjustable Text Size.
-    * Color Inversion.
-    * Link Highlighting.
-    * Reading Guide.
-* **Responsive Design**: A clean, modern UI that works seamlessly on desktop, tablet, and mobile devices.
+    * Dark / Light mode, high-contrast inversion, adjustable typography, and reading guides.
 
 ---
 
-## Technologies Used
+## Project Architecture
 
-* **Frontend**: HTML5, CSS3, JavaScript (ES6 Modules)
-* **Barcode Scanning**: [html5-qrcode](https://github.com/mebjas/html5-qrcode)
-* **Interactive Maps**: [Leaflet.js](https://leafletjs.com/) with map tiles from [OpenStreetMap](https://www.openstreetmap.org/).
-* **Country Data**: [REST Countries API](https://restcountries.com/)
-* **Icons**: [Font Awesome](https://fontawesome.com/)
+```
+OriginScan/
+├── app.js                   # Application coordinator & UI event handlers
+├── index.html               # Main layout and accessible markup
+├── style.css                # Responsive styles & design system
+├── js/
+│   └── core/
+│       ├── validator.js     # Mod-10 check digit, UPC-E expander, format normalizer
+│       ├── gs1-registry.js  # GS1 prefix table (offline lookup, 150+ ranges)
+│       ├── product-api.js   # Product APIs (Open Food Facts, Open Library) with LRU caching
+│       └── engine.js        # Multi-tier lookup orchestrator
+├── tests/
+│   └── test-suite.js        # Zero-dependency Node.js test suite (46+ assertions)
+├── policy/                  # Privacy notice, Terms of Service, Disclaimer
+└── .github/
+    └── ISSUE_TEMPLATE/      # Structured bug report & feature request templates
+```
 
----
+### Optional REST Countries fallback
 
-## How To Use
+Country details are loaded from the bundled dataset first. For countries not included
+there, the app can use REST Countries API v5 when the page is configured with an API
+key before the modules load:
 
-1.  **Start Scanning**:
-    * Click **"Start Scanning"** to activate your camera. Position a product's barcode within the frame.
-    * *or* Click **"Upload Barcode Image"** to select a picture from your device.
-    * *or* Enter the 12-digit (UPC-A) or 13-digit (EAN-13) barcode number in the text field and click **"Check Origin"**.
+```html
+<script>
+  globalThis.ORIGINSCAN_REST_COUNTRIES_API_KEY = 'your-api-key';
+</script>
+<script type="module" src="./app.js"></script>
+```
 
-2.  **View Results**:
-    * The country of origin and other details will instantly appear in the "Product Origin" card.
-    * The location will be pinned on the interactive map.
+Without this optional key, the app remains fully functional using the bundled country
+data and simply skips the online fallback.
 
-3.  **Manage History**:
-    * Scroll down to the "Recent Scans" section to see your history.
-    * Click the eye icon to re-run a scan or the trash icon to delete an entry.
-    * Click "Clear All" to permanently delete your history.
+### Manual SSH push workflow
 
-4.  **Use Actions**:
-    * **Report Suspicious**: If you think a barcode is incorrect, you can send a report.
-    * **Export Data**: Download your scan history as a JSON file.
-    * **Share Result**: Click the share icon on the results card to share a link to the result.
+The repository includes a manual GitHub Actions workflow at
+`.github/workflows/push-over-ssh.yml`. It runs the test suite before pushing generated
+changes over SSH. It does not run for ordinary pushes.
 
----
+Configure these repository secrets before using the workflow:
 
-## Policies
+1. `SSH_PRIVATE_KEY`: an Ed25519 private key whose public key has write access to this
+   repository. Do not commit or print this value.
+2. `SSH_KNOWN_HOSTS`: the pinned `github.com` host key collected from a trusted
+   environment, for example:
 
-Please review our policies to understand your rights and responsibilities when using OriginScan:
+   ```bash
+   ssh-keyscan -t ed25519 github.com
+   ```
 
-* [**Terms of Service**](./policy/terms-of-service.html): Outlines the rules and conditions for using OriginScan.
-* [**Privacy Notice**](./policy/privacy-notice.html): Explains how we handle your data, emphasizing our zero-knowledge architecture.
-* [**Disclaimer**](./policy/disclaimer.html): Clarifies the limitations of our Services, including the accuracy of barcode origin data.
+Trigger it from **Actions → Push generated changes over SSH → Run workflow**. The
+workflow uses the selected branch, runs `npm install` and `npm test`, and only creates a
+commit when generated changes are present.
 
 ---
 
 ## Local Development
 
-To run this project on your local machine, follow these steps.
+To run this project locally:
 
-1.  **Clone the repository**:
-    ```bash
-    git clone [https://github.com/samin-yasar/OriginScan.git](https://github.com/samin-yasar/OriginScan.git)
-    cd OriginScan
-    ```
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/samin-yasar/OriginScan.git
+   cd OriginScan
+   ```
 
-2.  **Run a local server**:
-    This project uses ES6 modules, which require a server environment to work correctly due to CORS policy. You can use any simple local server.
+2. **Start a local static server**:
+   Because OriginScan uses ES6 modules, files must be served over HTTP(S):
+   ```bash
+   # Using Python 3:
+   python3 -m http.server 8000
 
-    If you have Python 3 installed, you can run:
-    ```bash
-    python -m http.server
-    ```
-    If you have Node.js installed, you can use the `serve` package:
-    ```bash
-    npx serve
-    ```
+   # Or using Node.js:
+   npx serve .
+   ```
 
-3.  **Open in browser**:
-    Navigate to `http://localhost:8000` (or the port specified by your server) in your web browser.
+3. **Open in browser**:
+   Navigate to `http://localhost:8000`.
+
+---
+
+## Running Tests
+
+OriginScan includes a comprehensive, zero-dependency unit test suite testing the Mod-10 algorithm, barcode format sanitization, UPC-E expansion, and GS1 prefix resolution.
+
+Run it with standard Node.js:
+```bash
+node tests/test-suite.js
+```
 
 ---
 
 ## Contributing
 
-Contributions are welcome! If you have ideas for new features, bug fixes, or improvements, please feel free to contribute.
-
-1.  **Fork** the repository.
-2.  Create a new branch: `git checkout -b feature/your-feature-name`.
-3.  Make your changes and commit them: `git commit -m 'Add some feature'`.
-4.  Push to the branch: `git push origin feature/your-feature-name`.
-5.  Submit a **Pull Request**.
+Contributions are warmly welcomed! Please read our [**CONTRIBUTING.md**](CONTRIBUTING.md) guide for details on our code style, architecture, test guidelines, and PR workflow.
 
 ---
 
 ## License
 
-Copyright (C) 2025 [**Samin Yasar**](https://github.com/Samin-yasar). 
+Copyright (C) 2025 [**Samin Yasar**](https://github.com/Samin-yasar).  
 This program is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License (GPL v3)** as published by the Free Software Foundation, version 3 of the License. See the [LICENSE](LICENSE) file for details.

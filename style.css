@@ -556,8 +556,10 @@ footer.signature-footer a:hover {
 
 .scan-frame {
   position: relative;
-  width: 250px;
-  height: 150px;
+  width: 240px;
+  height: 240px;
+  max-width: 80vw;
+  max-height: 80vw;
   border: 2px solid transparent;
 }
 
@@ -609,7 +611,7 @@ footer.signature-footer a:hover {
 
 @keyframes scanLine {
   0%, 100% { transform: translateY(0); opacity: 0.5; }
-  50% { transform: translateY(146px); opacity: 1; }
+  50% { transform: translateY(236px); opacity: 1; }
 }
 
 .scan-instructions {
@@ -879,9 +881,13 @@ input[type="text"]:focus {
 }
 
 .country-flag {
-  width: 80px;
+  min-width: 80px;
+  width: auto;
+  max-width: 140px;
   height: 60px;
-  font-size: 4rem;
+  padding: 0 0.6rem;
+  font-size: 2.6rem;
+  letter-spacing: 0.15rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -891,6 +897,7 @@ input[type="text"]:focus {
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 .country-details h3 {
@@ -1721,3 +1728,385 @@ input[type="text"]:focus {
   50% { transform: scale(1.05); opacity: 0.8; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+/* ── New: Confidence Badge Tiers ───────────────────────────────────────────── */
+/* The old code used a single static style. These three tiers give users a
+   clear, colour-coded signal about how trustworthy the result is. */
+
+.confidence-badge.high { background: rgba(34, 197, 94, 0.15); border-color: #22c55e; }
+.confidence-badge.high .confidence-value { color: #22c55e; }
+
+.confidence-badge.medium { background: rgba(234, 179, 8, 0.15); border-color: #eab308; }
+.confidence-badge.medium .confidence-value { color: #eab308; }
+
+.confidence-badge.low { background: rgba(239, 68, 68, 0.15); border-color: #ef4444; }
+.confidence-badge.low .confidence-value { color: #ef4444; }
+
+/* ── New: Checksum Warning Banner ──────────────────────────────────────────── */
+/* Displayed when Mod-10 check digit validation fails — signals a likely misread. */
+
+.checksum-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-left: 4px solid #ef4444;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.82rem;
+  color: #ef4444;
+  line-height: 1.4;
+}
+
+.checksum-warning::before {
+  content: "⚠️";
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── New: GS1 Note Banner ──────────────────────────────────────────────────── */
+/* Shown for special/restricted prefix types (ISBN, ISSN, in-store codes, etc.) */
+
+.gs1-note {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-left: 4px solid #6366f1;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary, #94a3b8);
+  line-height: 1.4;
+}
+
+/* ── New: GS1 Registration Origin Label ────────────────────────────────────── */
+/* A small inline chip under the country name making it clear this is the
+   GS1 membership registration origin, not necessarily the factory location. */
+
+.origin-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--primary, #3d40f6);
+  background: rgba(61, 64, 246, 0.08);
+  border: 1px solid rgba(61, 64, 246, 0.2);
+  border-radius: 20px;
+  padding: 0.18rem 0.55rem;
+  margin-top: 0.3rem;
+  letter-spacing: 0.02em;
+}
+
+.origin-label i { font-size: 0.65rem; }
+
+/* ── New: Product Preview Panel ────────────────────────────────────────────── */
+/* Appears below country stats when Open Food Facts has data for the barcode. */
+
+.product-preview {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));
+}
+
+.product-preview-inner {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+}
+
+.product-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  flex-shrink: 0;
+}
+
+.product-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.product-brand {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--primary, #3d40f6);
+  opacity: 0.85;
+}
+
+.product-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-primary, #e2e8f0);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+/* ── New: Physical Manufacturing Origin Badge ──────────────────────────────── */
+/* The "🏭 Made in: ___" badge — shown only when the product record from
+   Open Food Facts explicitly declares a manufacturing origin on the label. */
+
+.product-origin-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 20px;
+  padding: 0.2rem 0.6rem;
+  color: #4ade80;
+  margin-top: 0.15rem;
+}
+
+/* ── New: Open Food Facts Link ─────────────────────────────────────────────── */
+
+.product-off-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--primary, #3d40f6);
+  text-decoration: none;
+  margin-top: 0.2rem;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.product-off-link:hover { opacity: 1; text-decoration: underline; }
+.product-off-link i { font-size: 0.65rem; }
+
+/* ── Offline Status Banner ─────────────────────────────────────────────────
+   Slides in from the top when the browser goes offline. Informs the user
+   that GS1 prefix lookups still work, but product API calls won't. */
+
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(30, 30, 50, 0.96);
+  border-bottom: 2px solid rgba(234, 179, 8, 0.6);
+  color: #eab308;
+  font-size: 0.85rem;
+  padding: 0.6rem 1.25rem;
+  backdrop-filter: blur(10px);
+  animation: slideDown 0.3s ease;
+}
+
+.offline-banner i { font-size: 1rem; flex-shrink: 0; }
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Torch / Flashlight Button ─────────────────────────────────────────────
+   Conditionally shown only on devices whose camera supports the torch track
+   constraint. Uses a warm amber glow to suggest the flashlight is on. */
+
+#toggle-torch.torch-active {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: #fbbf24;
+  color: #fbbf24;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.35);
+}
+
+#toggle-torch.torch-active i {
+  animation: torchPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes torchPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* ── Book / Source Badge ───────────────────────────────────────────────────
+   Shown beneath the product name when the data comes from Open Library,
+   Open Beauty Facts, or Open Products Facts (rather than Open Food Facts). */
+
+.product-source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  margin-top: 0.25rem;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+/* Source-specific accent colours */
+.product-source-badge.src-openlibrary      { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #6ee7b7; }
+.product-source-badge.src-openbeautyfacts  { background: rgba(236,72,153,0.1); border-color: rgba(236,72,153,0.3); color: #f9a8d4; }
+.product-source-badge.src-openproductsfacts{ background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: #fcd34d; }
+
+/* Book-specific extra metadata rows (author / publisher / year) */
+.product-book-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-muted, rgba(255,255,255,0.6));
+}
+
+.product-book-meta span strong {
+  color: var(--text-primary, rgba(255,255,255,0.9));
+  font-weight: 600;
+}
+
+/* ── Camera Zoom Button ───────────────────────────────────────────────────
+   Shown when camera hardware supports optical/digital zoom. */
+#toggle-zoom.zoom-active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+  color: #60a5fa;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+}
+
+/* ── Multi-Country Shared Prefix Section ───────────────────────────────────
+   Displays individual cards for joint GS1 prefix members (e.g. Belgium & Luxembourg) */
+
+.multi-country-section {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  animation: fadeIn 0.3s ease-in;
+}
+
+.multi-country-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.multi-country-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #a5b4fc;
+}
+
+.multi-country-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.multi-country-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.75rem;
+}
+
+.multi-country-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.multi-country-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.multi-country-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.multi-country-card-flag {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.multi-country-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.multi-country-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.multi-country-card-meta div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.multi-country-card-meta span.label {
+  color: var(--text-muted);
+}
+
+.multi-country-card-meta span.value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.btn-country-map {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-country-map:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
