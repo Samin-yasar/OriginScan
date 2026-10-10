@@ -912,24 +912,6 @@ input[type="text"]:focus {
   color: var(--text-secondary);
 }
 
-.confidence-badge {
-  margin-left: auto;
-  background: var(--secondary-light);
-  color: var(--text-inverse);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-full);
-  font-size: 0.875rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.confidence-badge .confidence-label {
-  opacity: 0.8;
-}
-
 .country-stats {
   border-top: 1px solid var(--border);
   padding-top: 1.5rem;
@@ -1705,7 +1687,6 @@ input[type="text"]:focus {
   .stat-item { width: 100%; }
   .card-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
   .card-header h2 { font-size: 1.1rem; }
-  .confidence-badge { margin-left: 0; }
   .country-header { flex-wrap: wrap; justify-content: center; text-align: center; }
   .country-details { text-align: center; }
 }
@@ -1728,19 +1709,6 @@ input[type="text"]:focus {
   50% { transform: scale(1.05); opacity: 0.8; }
   100% { transform: scale(1); opacity: 1; }
 }
-
-/* ── New: Confidence Badge Tiers ───────────────────────────────────────────── */
-/* The old code used a single static style. These three tiers give users a
-   clear, colour-coded signal about how trustworthy the result is. */
-
-.confidence-badge.high { background: rgba(34, 197, 94, 0.15); border-color: #22c55e; }
-.confidence-badge.high .confidence-value { color: #22c55e; }
-
-.confidence-badge.medium { background: rgba(234, 179, 8, 0.15); border-color: #eab308; }
-.confidence-badge.medium .confidence-value { color: #eab308; }
-
-.confidence-badge.low { background: rgba(239, 68, 68, 0.15); border-color: #ef4444; }
-.confidence-badge.low .confidence-value { color: #ef4444; }
 
 /* ── New: Checksum Warning Banner ──────────────────────────────────────────── */
 /* Displayed when Mod-10 check digit validation fails — signals a likely misread. */
@@ -1851,9 +1819,8 @@ input[type="text"]:focus {
   word-break: break-word;
 }
 
-/* ── New: Physical Manufacturing Origin Badge ──────────────────────────────── */
-/* The "🏭 Made in: ___" badge — shown only when the product record from
-   Open Food Facts explicitly declares a manufacturing origin on the label. */
+/* ── Reported Product Origin Badge ─────────────────────────────────────────── */
+/* Open Food Facts origin data may describe ingredients rather than manufacturing. */
 
 .product-origin-badge {
   display: inline-block;
@@ -2109,4 +2076,3 @@ input[type="text"]:focus {
   color: #fff;
   border-color: var(--primary);
 }
-

@@ -33,8 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const countryRegionElement = document.getElementById('country-region');
   const countryPopulationElement = document.getElementById('country-population');
   const countryCurrencyElement = document.getElementById('country-currency');
-  const confidenceBadge = document.getElementById('confidence-badge');
-  const confidenceValue = confidenceBadge.querySelector('.confidence-value');
   const scanCountElement = document.getElementById('scan-count');
   const scanStatusIndicator = document.querySelector('#scan-status .status-indicator');
   const scanStatusText = document.querySelector('#scan-status span');
@@ -386,16 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
     countryNameElement.textContent = gs1 ? gs1.country : 'Unknown Origin';
     countryCodeElement.textContent = `GS1 Prefix: ${barcode.slice(0, 3)} · ${result.format}`;
 
-    // ── Confidence badge ──
-    const pct = result.confidencePct;
-    if (confidenceValue) confidenceValue.textContent = `${pct}%`;
-    if (confidenceBadge) {
-      confidenceBadge.className = 'confidence-badge';
-      if (pct >= 80) confidenceBadge.classList.add('high');
-      else if (pct >= 50) confidenceBadge.classList.add('medium');
-      else confidenceBadge.classList.add('low');
-    }
-
     // ── Checksum warning ──
     const checksumWarning = document.getElementById('checksum-warning');
     if (checksumWarning) {
@@ -513,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (productOriginBadge) {
           if (product.declaredOrigin) {
-            productOriginBadge.textContent = `🏭 Made in: ${product.declaredOrigin}`;
+            productOriginBadge.textContent = `📍 Reported origin: ${product.declaredOrigin}`;
             productOriginBadge.style.display = 'inline-block';
           } else {
             productOriginBadge.style.display = 'none';
@@ -575,7 +563,6 @@ document.addEventListener('DOMContentLoaded', () => {
       country: gs1 ? gs1.country : 'Unknown',
       flag: gs1 ? gs1.flag : '❓',
       productName: product && product.found ? product.name : null,
-      confidence: result.confidence,
       timestamp: new Date().toLocaleString()
     };
     addScanToHistory(historyEntry);

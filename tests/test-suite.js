@@ -52,7 +52,7 @@ async function runTests() {
   // Dynamically import so we can use top-level await
   const { validateBarcode, verifyCheckDigit, expandUPCE, extractBarcode } = await import('../js/core/validator.js');
   const { resolvePrefix } = await import('../js/core/gs1-registry.js');
-  const { parseRestCountryResponse, fetchCountryDetails } = await import('../js/core/engine.js');
+  const { lookup, parseRestCountryResponse, fetchCountryDetails } = await import('../js/core/engine.js');
 
   // ============================================================
   // 1. verifyCheckDigit — Mod-10 algorithm
@@ -193,6 +193,10 @@ async function runTests() {
     const padded = resolvePrefix('3');
     assertEqual('Single digit prefix is zero-padded', padded.prefix, '003');
   });
+
+  const chileResult = await lookup('7806723188635', { fetchProduct: false });
+  assertEqual('Chile GS1 apiName is preserved for map updates', chileResult.gs1.apiName, 'Chile');
+  assertEqual('Single-country GS1 result has no member list', chileResult.gs1.countries, null);
 
   // ============================================================
   // 4. expandUPCE

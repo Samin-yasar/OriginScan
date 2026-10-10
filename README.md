@@ -16,7 +16,7 @@ OriginScan solves this with a **Multi-Tier Resolution Engine**:
 1. **Format Validation & Mod-10 Checksum**: Verifies the barcode's GS1 Mod-10 check digit and diagnoses typos before making any queries.
 2. **Offline GS1 Registry**: Maps over 150 prefix blocks with support for 2-digit, 3-digit, and 4-digit prefixes, special ranges (ISBN, ISSN, coupons), and restricted in-store barcodes.
 3. **Open Product Database (Tier 2)**: Queries the public Open Food Facts crowd-sourced database (with local in-memory LRU caching) to fetch actual product names, brands, images, and **declared manufacturing origins**.
-4. **Dual Origin Transparency**: Displays both the GS1 registration origin and the physical manufacturing origin side-by-side with clear confidence indicators.
+4. **Origin Transparency**: Separates the GS1 registration country from product-database origin information, which may describe ingredients rather than manufacturing.
 
 ---
 
@@ -31,8 +31,7 @@ OriginScan solves this with a **Multi-Tier Resolution Engine**:
     * **Format Support**: EAN-13, UPC-A (auto-normalised), UPC-E (zero-expansion algorithm), and EAN-8.
 * **Dual-Origin & Product Data**:
     * **Product Preview**: Shows product title, brand, category, and photo when available.
-    * **Dual Origin Badges**: Explicitly contrasts "GS1 Registered Origin" vs. "Physical Manufacturing Origin".
-    * **Confidence Scoring**: Transparent rating (High / Medium / Low) based on data verification sources.
+    * **Origin context**: Labels GS1 registration data and third-party reported origin data separately instead of presenting either as definitive manufacturing proof.
 * **Geographical & Economic Insights**:
     * Official country name, flag, region, primary currency, and population data.
     * Dynamic interactive map powered by Leaflet.js and OpenStreetMap.

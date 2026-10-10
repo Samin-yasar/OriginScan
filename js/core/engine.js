@@ -256,6 +256,8 @@ function _buildResult({ rawInput, validation, gs1, product, countryDetails, conf
       prefix: gs1.prefix,
       country: gs1.country,
       flag: gs1.flag,
+      apiName: gs1.apiName || null,
+      countries: gs1.countries || null,
       region: gs1.region,
       currency: gs1.currency,
       type: gs1.type,

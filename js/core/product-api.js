@@ -124,7 +124,8 @@ function _parseOFFProduct(product, barcode, source) {
   const name  = _clean(product.product_name);
   const brand = _clean(product.brands);
 
-  // Declared manufacturing/origin — off stores as free-text from contributor labels
+  // Open Food Facts may use `origins` for ingredient origin, so callers must
+  // present this as reported source data rather than definitive manufacturing.
   const declaredOrigin = _clean(product.origins) || _clean(product.manufacturing_places);
 
   // `countries_tags` is like ["en:france", "en:germany"]
@@ -290,7 +291,7 @@ export { fetchProductData, clearProductCache, ISBN_PREFIXES, SOURCE_META };
  * @property {string|null}  name           — product / book title
  * @property {string|null}  brand          — brand name or publisher (for books)
  * @property {string|null}  imageUrl       — front-of-pack or book cover thumbnail
- * @property {string|null}  declaredOrigin — "Made in ___" text or publish city
+ * @property {string|null} declaredOrigin — reported origin text; may describe ingredients
  * @property {string[]}     saleCountries  — countries where product is sold
  * @property {string|null}  category       — product category or "Book"
  * @property {string|null}  author         — book author(s), null for non-books
