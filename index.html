@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OriginScan — Barcode Product Origin Scanner</title>
-    <meta name="description" content="Instantly discover where products come from. Scan EAN-13, UPC-A, EAN-8 barcodes to look up food, cosmetic, and book origins for free.">
+    <meta name="description"
+        content="Instantly discover where products come from. Scan EAN-13, UPC-A, EAN-8 barcodes to look up food, cosmetic, and book origins for free.">
     <!-- PWA -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#2563eb">
@@ -26,7 +27,8 @@
     <!-- Offline status banner — shown via JS when navigator.onLine is false -->
     <div id="offline-banner" class="offline-banner" style="display:none;" role="status" aria-live="polite">
         <i class="fas fa-wifi-slash"></i>
-        <span><strong>Offline mode</strong> &mdash; GS1 prefix lookup still works. Product details unavailable until reconnected.</span>
+        <span><strong>Offline mode</strong> &mdash; GS1 prefix lookup still works. Product details unavailable until
+            reconnected.</span>
     </div>
 
     <div id="reading-guide" class="reading-guide" style="display: none;"></div>
@@ -48,9 +50,16 @@
                 <span>OriginScan</span>
             </div>
             <div class="nav-controls">
+                <button id="dark-mode-toggle" class="nav-btn" aria-label="Switch to dark mode" title="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                </button>
                 <button id="changelog-btn" class="nav-btn" aria-label="View Changelog">
                     <i class="fas fa-history"></i>
                 </button>
+                <a class="nav-btn nav-link" href="https://github.com/Samin-yasar/OriginScan" target="_blank"
+                    rel="noopener noreferrer" aria-label="View OriginScan on GitHub" title="View on GitHub">
+                    <i class="fab fa-github"></i>
+                </a>
                 <button id="help-btn" class="nav-btn" aria-label="Help">
                     <i class="fas fa-question-circle"></i>
                 </button>
@@ -61,21 +70,7 @@
     <div class="container">
         <header class="header">
             <h1>OriginScan</h1>
-            <p>Discover product origins instantly with our advanced scanner</p>
-            <div class="header-stats">
-                <div class="stat-item">
-                    <span class="stat-number" id="scan-count">0</span>
-                    <span class="stat-label">Scans Today</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">195+</span>
-                    <span class="stat-label">Countries</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">99%</span>
-                    <span class="stat-label">Accuracy</span>
-                </div>
-            </div>
+            <p>Scan a barcode to see its GS1 registration country.</p>
         </header>
 
         <div id="scanner-section" class="main-grid">
@@ -119,12 +114,14 @@
                             <span>Switch Camera</span>
                         </button>
                         <!-- Torch button: only shown when camera hardware supports it -->
-                        <button id="toggle-torch" class="btn btn-outline" style="display: none;" title="Toggle flashlight" aria-pressed="false">
+                        <button id="toggle-torch" class="btn btn-outline" style="display: none;"
+                            title="Toggle flashlight" aria-pressed="false">
                             <i class="fas fa-bolt"></i>
                             <span>Torch</span>
                         </button>
                         <!-- Zoom button: only shown when camera hardware supports optical/digital zoom -->
-                        <button id="toggle-zoom" class="btn btn-outline" style="display: none;" title="Toggle 1x/2x camera zoom" aria-label="Toggle camera zoom">
+                        <button id="toggle-zoom" class="btn btn-outline" style="display: none;"
+                            title="Toggle 1x/2x camera zoom" aria-label="Toggle camera zoom">
                             <i class="fas fa-search-plus"></i>
                             <span>1x</span>
                         </button>
@@ -166,7 +163,7 @@
 
             <div class="results-card">
                 <div class="card-header">
-                    <h2><i class="fas fa-globe"></i> Product Origin</h2>
+                    <h2><i class="fas fa-globe"></i> Result</h2>
                     <button id="share-result" class="share-btn" style="display: none;">
                         <i class="fas fa-share-alt"></i>
                     </button>
@@ -177,8 +174,8 @@
                         <div class="placeholder-icon">
                             <i class="fas fa-search"></i>
                         </div>
-                        <h3>Scan or enter a barcode</h3>
-                        <p>Get instant information about product origin and country details</p>
+                        <h3>Your result will appear here</h3>
+                        <p>Scan or enter a barcode to begin.</p>
                     </div>
 
                     <div id="country-result" class="country-result" style="display: none;">
@@ -223,7 +220,8 @@
                                 <span class="multi-country-badge">
                                     <i class="fas fa-layer-group"></i> Shared GS1 Prefix
                                 </span>
-                                <span class="multi-country-hint">Both nations share this prefix block. Click a nation to focus on map.</span>
+                                <span class="multi-country-hint">Both nations share this prefix block. Click a nation to
+                                    focus on map.</span>
                             </div>
                             <div id="multi-country-cards" class="multi-country-cards"></div>
                         </div>
@@ -231,13 +229,16 @@
                         <!-- Product preview panel — populated from Open Food Facts (online only) -->
                         <div id="product-preview" class="product-preview" style="display:none;">
                             <div class="product-preview-inner">
-                                <img id="product-image" class="product-thumb" src="" alt="Product image" style="display:none;">
+                                <img id="product-image" class="product-thumb" src="" alt="Product image"
+                                    style="display:none;">
                                 <div class="product-meta">
                                     <span class="product-brand" id="product-brand-display"></span>
                                     <span class="product-name" id="product-name-display"></span>
                                     <!-- Declared physical manufacturing origin (from product label) -->
-                                    <span id="product-origin-badge" class="product-origin-badge" style="display:none;"></span>
-                                    <a id="product-off-link" class="product-off-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">
+                                    <span id="product-origin-badge" class="product-origin-badge"
+                                        style="display:none;"></span>
+                                    <a id="product-off-link" class="product-off-link" href="#" target="_blank"
+                                        rel="noopener noreferrer" style="display:none;">
                                         <i class="fas fa-external-link-alt"></i> View on Open Food Facts
                                     </a>
                                 </div>
@@ -247,62 +248,69 @@
                 </div>
             </div>
 
-            <div class="map-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-map-marker-alt"></i> Location</h2>
-                    <div class="map-controls">
-                        <button id="zoom-in" class="map-btn">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                        <button id="zoom-out" class="map-btn">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                        <button id="reset-view" class="map-btn">
-                            <i class="fas fa-home"></i>
-                        </button>
+            <details id="additional-tools" class="secondary-tools">
+                <summary><i class="fas fa-sliders"></i> More tools</summary>
+                <div class="secondary-tools-content">
+                    <div class="map-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-map-marker-alt"></i> Location</h2>
+                            <div class="map-controls">
+                                <button id="zoom-in" class="map-btn" aria-label="Zoom in">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button id="zoom-out" class="map-btn" aria-label="Zoom out">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <button id="reset-view" class="map-btn" aria-label="Reset map view">
+                                    <i class="fas fa-home"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="map" class="map-container"></div>
+
+                        <div class="map-legend">
+                            <div class="legend-item">
+                                <div class="legend-color primary"></div>
+                                <span>Product origin</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color secondary"></div>
+                                <span>Manufacturing hub</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="actions-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-bolt"></i> Quick actions</h2>
+                        </div>
+
+                        <div class="actions-grid">
+                            <button id="report-suspicious" class="action-btn danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Report suspicious</span>
+                            </button>
+                            <button id="export-data" class="action-btn primary">
+                                <i class="fas fa-download"></i>
+                                <span>Export data</span>
+                            </button>
+                            <button class="action-btn secondary"
+                                onclick="document.getElementById('scan-history').open = true; document.getElementById('scan-history-list').scrollIntoView({ behavior: 'smooth' });">
+                                <i class="fas fa-history"></i>
+                                <span>Scan history</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-
-                <div id="map" class="map-container"></div>
-
-                <div class="map-legend">
-                    <div class="legend-item">
-                        <div class="legend-color primary"></div>
-                        <span>Product Origin</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color secondary"></div>
-                        <span>Manufacturing Hub</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="actions-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
-                </div>
-
-                <div class="actions-grid">
-                    <button id="report-suspicious" class="action-btn danger">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>Report Suspicious</span>
-                    </button>
-                    <button id="export-data" class="action-btn primary">
-                        <i class="fas fa-download"></i>
-                        <span>Export Data</span>
-                    </button>
-                    <button class="action-btn secondary" onclick="window.location.href='#scan-history-list'">
-                        <i class="fas fa-history"></i>
-                        <span>Scan History</span>
-                    </button>
-                </div>
-            </div>
+            </details>
         </div>
 
-        <div class="recent-scans">
+        <details id="scan-history" class="recent-scans">
+            <summary><i class="fas fa-clock"></i> Recent scans</summary>
             <div class="section-header">
-                <h2><i class="fas fa-clock"></i> Recent Scans</h2>
-                <button id="clear-history" class="btn btn-outline-sm">Clear All</button>
+                <span></span>
+                <button id="clear-history" class="btn btn-outline-sm">Clear all</button>
             </div>
 
             <div id="scan-history-list" class="scan-list">
@@ -311,7 +319,7 @@
                     <p>No recent scans</p>
                 </div>
             </div>
-        </div>
+        </details>
     </div>
 
     <div class="accessibility-fab">
@@ -323,8 +331,6 @@
                 <h3>Accessibility</h3>
             </div>
             <div class="panel-group">
-                <button id="dark-mode-toggle" class="panel-btn" title="Toggle Theme"><i class="fas fa-moon"></i>
-                    Theme</button>
                 <button id="invert-colors-toggle" class="panel-btn" title="Invert Colors"><i class="fas fa-adjust"></i>
                     Invert</button>
             </div>
@@ -419,8 +425,9 @@
                 </div>
                 <div class="help-section">
                     <h3><i class="fas fa-universal-access"></i> Accessibility</h3>
-                    <p>Click the accessibility icon (bottom right) to open the settings panel. You can adjust the theme,
-                        text size, and enable reading aids to suit your needs.</p>
+                    <p>Click the accessibility icon (bottom right) to open the settings panel. You can adjust text size
+                        and enable reading aids to suit your needs. Use the theme button in the top bar to switch
+                        themes.</p>
                 </div>
             </div>
         </div>
@@ -435,43 +442,62 @@
                 </button>
             </div>
             <div class="modal-body">
-              <div class="changelog-list">
-                <div class="changelog-entry">
-                    <h4>Version 1.5.0</h4>
-                    <span class="changelog-date">July 12, 2025</span>
-                    <ul>
-                        <li><span class="badge new">New</span> Added a feature to export scan results as JSON files for
-                            easy sharing and record-keeping.</li>
-                        <li><span class="badge improvement">UI</span> Enhanced the map with better zoom controls and
-                            markers for product origins.</li>
-                        <li><span class="badge improvement">Fix</span> Fixed issues with the focusing of mobile camera.</li>
-                    </ul>
-              </div>
                 <div class="changelog-list">
                     <div class="changelog-entry">
-                        <h4>Version 1.4.0</h4>
-                        <span class="changelog-date">June 27, 2025</span>
+                        <h4>Version 1.6.0</h4>
+                        <span class="changelog-date">October 10, 2026</span>
                         <ul>
-                            <li><span class="badge new">New</span> Added Privacy Notice, Terms of Service (TOS), and
-                                Disclaimer pages for clarification of user data handling.</li>
-                            <li><span class="badge improvement">UI</span> Redesigned the results page for better
-                                readability and user experience.</li>
-                            <li><span class="badge fix">Fix</span> Fixed issues with the map not displaying correctly on
-                                some devices.</li>
+                            <li><span class="badge improvement">UI</span> Simplified the landing page and improved the
+                                mobile
+                                scanning experience.</li>
+                            <li><span class="badge new">New</span> Added a GitHub repository link and moved the theme
+                                toggle
+                                to the top navigation.</li>
+                            <li><span class="badge fix">Fix</span> Separated the legal notice and Bangladesh attribution
+                                from
+                                the changelog for clearer navigation.</li>
                         </ul>
                     </div>
                     <div class="changelog-entry">
-                        <h4>Version 1.3.0</h4>
-                        <span class="changelog-date">June 23, 2025</span>
+                        <h4>Version 1.5.0</h4>
+                        <span class="changelog-date">July 12, 2025</span>
                         <ul>
-                            <li><span class="badge new">New</span> Added a feature to report suspicious barcodes
-                                directly from the results page.</li>
-                            <li><span class="badge improvement">UI</span> Enhanced the user interface for better
-                                usability and aesthetics.</li>
-                            <li><span class="badge fix">Fix</span> Resolved issues with camera switching and improved
-                                scanning reliability.</li>
+                            <li><span class="badge new">New</span> Added a feature to export scan results as JSON files
+                                for
+                                easy sharing and record-keeping.</li>
+                            <li><span class="badge improvement">UI</span> Enhanced the map with better zoom controls and
+                                markers for product origins.</li>
+                            <li><span class="badge improvement">Fix</span> Fixed issues with the focusing of mobile
+                                camera.</li>
                         </ul>
                     </div>
+                    <div class="changelog-list">
+                        <div class="changelog-entry">
+                            <h4>Version 1.4.0</h4>
+                            <span class="changelog-date">June 27, 2025</span>
+                            <ul>
+                                <li><span class="badge new">New</span> Added Privacy Notice, Terms of Service (TOS), and
+                                    Disclaimer pages for clarification of user data handling.</li>
+                                <li><span class="badge improvement">UI</span> Redesigned the results page for better
+                                    readability and user experience.</li>
+                                <li><span class="badge fix">Fix</span> Fixed issues with the map not displaying
+                                    correctly on
+                                    some devices.</li>
+                            </ul>
+                        </div>
+                        <div class="changelog-entry">
+                            <h4>Version 1.3.0</h4>
+                            <span class="changelog-date">June 23, 2025</span>
+                            <ul>
+                                <li><span class="badge new">New</span> Added a feature to report suspicious barcodes
+                                    directly from the results page.</li>
+                                <li><span class="badge improvement">UI</span> Enhanced the user interface for better
+                                    usability and aesthetics.</li>
+                                <li><span class="badge fix">Fix</span> Resolved issues with camera switching and
+                                    improved
+                                    scanning reliability.</li>
+                            </ul>
+                        </div>
                         <div class="changelog-entry">
                             <h4>Version 1.2.0</h4>
                             <span class="changelog-date">June 22, 2025</span>
@@ -517,36 +543,41 @@
                 </div>
             </div>
         </div>
-            <footer class="policy-notice">
-                <p>By using this service, you agree to the <a href="./policy/terms-of-service.html">Terms of
-                        Service</a>. Read more about our <a href="./policy/privacy-notice.html">Privacy Notice</a> and
-                    <a href="./policy/disclaimer.html">Disclaimer</a>.</p>
-            </footer>
+    </div>
 
-            <footer class="signature-footer">
-                <p>Made with a lot of coffee ☕ and love 💙 in Bangladesh</p>
-            </footer>
+    <footer class="policy-notice">
+        <p class="policy-title">Important information</p>
+        <p>By using OriginScan, you agree to the <a href="./policy/terms-of-service.html">Terms of Service</a>.
+            Please review our <a href="./policy/privacy-notice.html">Privacy Notice</a> and <a
+                href="./policy/disclaimer.html">Disclaimer</a>.</p>
+    </footer>
+
+    <footer class="signature-footer">
+        <p>Made with coffee and care in Bangladesh.</p>
+        <a href="https://github.com/Samin-yasar/OriginScan" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-github"></i> OriginScan on GitHub
+        </a>
+    </footer>
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Processing barcode...</p>
         </div>
+    </div>
 
-        <div id="loading-overlay" class="loading-overlay" style="display: none;">
-            <div class="loading-content">
-                <div class="loading-spinner"></div>
-                <p>Processing barcode...</p>
-            </div>
-        </div>
+    <script type="module" src="countries.js"></script>
+    <script type="module" src="app.js"></script>
 
-        <script type="module" src="countries.js"></script>
-        <script type="module" src="app.js"></script>
-
-        <!-- Service Worker registration (non-blocking, module scope) -->
-        <script>
-          if ('serviceWorker' in navigator) {
+    <!-- Service Worker registration (non-blocking, module scope) -->
+    <script>
+        if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-              navigator.serviceWorker.register('./sw.js', { scope: './' })
-                .then(reg => console.log('[OriginScan] SW registered, scope:', reg.scope))
-                .catch(err => console.warn('[OriginScan] SW registration failed:', err));
+                navigator.serviceWorker.register('./sw.js', { scope: './' })
+                    .then(reg => console.log('[OriginScan] SW registered, scope:', reg.scope))
+                    .catch(err => console.warn('[OriginScan] SW registration failed:', err));
             });
-          }
-        </script>
-    </body>
+        }
+    </script>
+</body>
+
 </html>

@@ -291,6 +291,10 @@ body.reading-guide-active {
   justify-content: center;
 }
 
+.nav-link {
+  text-decoration: none;
+}
+
 .nav-btn:hover {
   background: var(--primary);
   color: var(--text-inverse);
@@ -326,6 +330,12 @@ footer.policy-notice a:hover {
   text-decoration: underline;
 }
 
+footer.policy-notice .policy-title {
+  margin-bottom: 0.35rem;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
 footer.signature-footer {
   text-align: center;
   padding: 1.5rem;
@@ -345,6 +355,8 @@ footer.signature-footer p {
 }
 
 footer.signature-footer a {
+  display: inline-block;
+  margin-top: 0.5rem;
   color: var(--text-inverse);
   font-weight: 600;
 }
@@ -356,17 +368,17 @@ footer.signature-footer a:hover {
 /* Header */
 .header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
 }
 
 .header h1 {
-  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
   font-weight: 700;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   position: relative;
   display: inline-block;
 }
@@ -385,10 +397,10 @@ footer.signature-footer a:hover {
 }
 
 .header p {
-  font-size: 1.25rem;
+  font-size: 1rem;
   color: var(--text-secondary);
   font-weight: 400;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .header-stats {
@@ -433,7 +445,64 @@ footer.signature-footer a:hover {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto auto;
   gap: 2rem;
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Keep secondary features available without competing with the scanner. */
+.secondary-tools {
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.secondary-tools > summary,
+.recent-scans > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.9rem 1.25rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.secondary-tools > summary::-webkit-details-marker,
+.recent-scans > summary::-webkit-details-marker {
+  display: none;
+}
+
+.secondary-tools > summary::after,
+.recent-scans > summary::after {
+  content: '+';
+  margin-left: auto;
+  font-size: 1.25rem;
+  color: var(--text-muted);
+}
+
+.secondary-tools[open] > summary,
+.recent-scans[open] > summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.secondary-tools[open] > summary::after,
+.recent-scans[open] > summary::after {
+  content: '−';
+}
+
+.secondary-tools-content {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.secondary-tools .map-card,
+.secondary-tools .actions-card {
+  grid-column: auto;
+  grid-row: auto;
+  box-shadow: none;
 }
 
 /* Card Base Styles */
@@ -1099,13 +1168,22 @@ input[type="text"]:focus {
 
 /* Recent Scans Section */
 .recent-scans {
-  margin-top: 3rem;
+  margin-top: 1.5rem;
   background: var(--bg-card);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
-  padding: 2rem;
+  padding: 0;
   overflow: hidden;
+}
+
+.recent-scans .section-header {
+  margin: 0;
+  padding: 0.75rem 1.25rem;
+}
+
+.recent-scans .scan-list {
+  padding: 0 1.25rem 1.25rem;
 }
 
 .section-header {
@@ -1679,6 +1757,7 @@ input[type="text"]:focus {
   .input-group { flex-direction: column; }
   .action-btn { padding: 1rem; font-size: 0.9rem; }
   .action-btn i { font-size: 1.75rem; }
+  .secondary-tools-content { padding: 1rem; }
 }
 
 @media (max-width: 768px) {
@@ -1689,12 +1768,21 @@ input[type="text"]:focus {
   .card-header h2 { font-size: 1.1rem; }
   .country-header { flex-wrap: wrap; justify-content: center; text-align: center; }
   .country-details { text-align: center; }
+  .header { margin-bottom: 1rem; }
+  .camera-view { min-height: 280px; }
+  .scanner-container { padding: 1rem; }
+  .manual-input-section { padding: 0 1rem 1rem; }
+  .file-input-section { margin: 0 1rem 1rem !important; }
+  .secondary-tools-content { gap: 1rem; }
 }
 
 @media (max-width: 480px) {
   .container { padding: 1rem 0.5rem; }
   .scanner-card, .results-card, .map-card, .actions-card, .recent-scans { border-radius: var(--radius-lg); }
   .card-header, .padding { padding: 1rem; }
+  .header h1 { font-size: 2.25rem; }
+  .header p { font-size: 0.95rem; }
+  .secondary-tools > summary, .recent-scans > summary { padding: 0.85rem 1rem; }
   .scanner-container, .manual-input-section, .results-card .country-display, .map-card .map-container, .actions-grid, .recent-scans .section-header, .recent-scans .scan-list, .modal-content .modal-header, .modal-content .modal-body {
     padding: 1rem;
   }
