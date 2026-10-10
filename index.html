@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OriginScan — Barcode Product Origin Scanner</title>
     <meta name="description"
-        content="Instantly discover where products come from. Scan EAN-13, UPC-A, EAN-8 barcodes to look up food, cosmetic, and book origins for free.">
+        content="Client-side barcode scanner that looks up GS1 registration countries offline and queries Open Food Facts to distinguish barcode registration from actual manufacturing origin.">
     <!-- PWA -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#2563eb">
@@ -272,11 +272,11 @@
                         <div class="map-legend">
                             <div class="legend-item">
                                 <div class="legend-color primary"></div>
-                                <span>Product origin</span>
+                                <span>GS1 registration country</span>
                             </div>
                             <div class="legend-item">
                                 <div class="legend-color secondary"></div>
-                                <span>Manufacturing hub</span>
+                                <span>Declared manufacturing origin</span>
                             </div>
                         </div>
                     </div>
@@ -366,8 +366,7 @@
             </div>
 
             <div class="modal-body">
-                <form action="https://formsubmit.co/samin.rash525@silomails.com" method="POST" id="report-form">
-                    <input type="hidden" name="_next" value="https://samin-yasar.github.io/thank-you.html">
+                <form action="https://formsubmit.co/contact@samin-yasar.dev" method="POST" id="report-form">
                     <input type="text" name="_honey" class="honeypot" autocomplete="off" aria-hidden="true"
                         tabindex="-1">
                     <input type="hidden" name="_captcha" value="false">
@@ -394,6 +393,33 @@
                             Report</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thank You Modal -->
+    <div id="thank-you-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="thank-you-title">
+        <div class="modal-content thank-you-modal-content">
+            <div class="modal-header">
+                <h2 id="thank-you-title">Report Received</h2>
+                <button id="close-thank-you" class="close-btn" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body thank-you-body">
+                <div class="thank-you-icon-wrap" aria-hidden="true">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h3>Thank You for Your Report!</h3>
+                <p>
+                    Your report has been submitted successfully. Our team reviews all flagged barcodes to verify product
+                    data accuracy and maintain transparency for everyone.
+                </p>
+                <div class="thank-you-actions">
+                    <button id="dismiss-thank-you" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Done
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -443,6 +469,16 @@
             </div>
             <div class="modal-body">
                 <div class="changelog-list">
+                    <div class="changelog-entry">
+                        <h4>Version 1.7.0</h4>
+                        <span class="changelog-date">October 11, 2026</span>
+                        <ul>
+                            <li><span class="badge new">New</span> Added accessible confirmation modal for suspicious barcode report submissions.</li>
+                            <li><span class="badge improvement">Accuracy</span> Clarified GS1 registration country vs. declared manufacturing origin across map and result views.</li>
+                            <li><span class="badge improvement">Accessibility</span> Published comprehensive Accessibility guidelines (WCAG 2.2 AA target) and optimized vector iconography.</li>
+                            <li><span class="badge fix">PWA</span> Upgraded Service Worker cache strategy with network-first navigation for instant updates.</li>
+                        </ul>
+                    </div>
                     <div class="changelog-entry">
                         <h4>Version 1.6.0</h4>
                         <span class="changelog-date">October 10, 2026</span>
@@ -561,22 +597,25 @@
                 <defs>
                     <pattern id="kantha-pat" x="0" y="0" width="40" height="32" patternUnits="userSpaceOnUse">
                         <!-- horizontal threads -->
-                        <line x1="0" y1="16" x2="40" y2="16" stroke="#F42A41" stroke-width="1.2" stroke-dasharray="3,3"/>
+                        <line x1="0" y1="16" x2="40" y2="16" stroke="#F42A41" stroke-width="1.2"
+                            stroke-dasharray="3,3" />
                         <!-- diamond outline -->
-                        <polygon points="20,4 34,16 20,28 6,16" fill="none" stroke="#F42A41" stroke-width="1.4"/>
+                        <polygon points="20,4 34,16 20,28 6,16" fill="none" stroke="#F42A41" stroke-width="1.4" />
                         <!-- inner diamond -->
-                        <polygon points="20,10 26,16 20,22 14,16" fill="#F42A41" opacity="0.55"/>
+                        <polygon points="20,10 26,16 20,22 14,16" fill="#F42A41" opacity="0.55" />
                         <!-- cross stitches at corners -->
-                        <line x1="6" y1="12" x2="10" y2="16" stroke="#fff" stroke-width="0.9" opacity="0.7"/>
-                        <line x1="6" y1="20" x2="10" y2="16" stroke="#fff" stroke-width="0.9" opacity="0.7"/>
-                        <line x1="34" y1="12" x2="30" y2="16" stroke="#fff" stroke-width="0.9" opacity="0.7"/>
-                        <line x1="34" y1="20" x2="30" y2="16" stroke="#fff" stroke-width="0.9" opacity="0.7"/>
+                        <line x1="6" y1="12" x2="10" y2="16" stroke="#fff" stroke-width="0.9" opacity="0.7" />
+                        <line x1="6" y1="20" x2="10" y2="16" stroke="#fff" stroke-width="0.9" opacity="0.7" />
+                        <line x1="34" y1="12" x2="30" y2="16" stroke="#fff" stroke-width="0.9" opacity="0.7" />
+                        <line x1="34" y1="20" x2="30" y2="16" stroke="#fff" stroke-width="0.9" opacity="0.7" />
                         <!-- top/bottom border stitch lines -->
-                        <line x1="0" y1="3" x2="40" y2="3" stroke="#fff" stroke-width="0.6" stroke-dasharray="2,4" opacity="0.5"/>
-                        <line x1="0" y1="29" x2="40" y2="29" stroke="#fff" stroke-width="0.6" stroke-dasharray="2,4" opacity="0.5"/>
+                        <line x1="0" y1="3" x2="40" y2="3" stroke="#fff" stroke-width="0.6" stroke-dasharray="2,4"
+                            opacity="0.5" />
+                        <line x1="0" y1="29" x2="40" y2="29" stroke="#fff" stroke-width="0.6" stroke-dasharray="2,4"
+                            opacity="0.5" />
                     </pattern>
                 </defs>
-                <rect width="800" height="32" fill="url(#kantha-pat)"/>
+                <rect width="800" height="32" fill="url(#kantha-pat)" />
             </svg>
         </div>
 
@@ -585,13 +624,15 @@
 
             <!-- Shapla (Water Lily) — national flower of Bangladesh -->
             <div class="cultural-icon-wrap" title="Shapla — National Flower">
-                <img class="cultural-icon" src="./assets/vectors/shapla.svg" alt="Shapla — national flower of Bangladesh" draggable="false">
+                <img class="cultural-icon" src="./assets/vectors/shapla.svg"
+                    alt="Shapla — national flower of Bangladesh" draggable="false">
                 <span class="cultural-label">শাপলা</span>
             </div>
 
             <!-- Ilish (Hilsa Fish) — national fish of Bangladesh -->
             <div class="cultural-icon-wrap" title="Ilish — National Fish">
-                <img class="cultural-icon cultural-icon--wide" src="./assets/vectors/ilish.svg" alt="Ilish — national fish of Bangladesh" draggable="false">
+                <img class="cultural-icon cultural-icon--wide" src="./assets/vectors/ilish.svg"
+                    alt="Ilish — national fish of Bangladesh" draggable="false">
                 <span class="cultural-label">ইলিশ</span>
             </div>
 
@@ -611,20 +652,20 @@
                 <defs>
                     <pattern id="muslin-pat" x="0" y="0" width="20" height="18" patternUnits="userSpaceOnUse">
                         <!-- warp threads (vertical) -->
-                        <line x1="5"  y1="0" x2="5"  y2="18" stroke="#fff" stroke-width="0.6" opacity="0.25"/>
-                        <line x1="10" y1="0" x2="10" y2="18" stroke="#fff" stroke-width="0.6" opacity="0.15"/>
-                        <line x1="15" y1="0" x2="15" y2="18" stroke="#fff" stroke-width="0.6" opacity="0.25"/>
+                        <line x1="5" y1="0" x2="5" y2="18" stroke="#fff" stroke-width="0.6" opacity="0.25" />
+                        <line x1="10" y1="0" x2="10" y2="18" stroke="#fff" stroke-width="0.6" opacity="0.15" />
+                        <line x1="15" y1="0" x2="15" y2="18" stroke="#fff" stroke-width="0.6" opacity="0.25" />
                         <!-- weft threads (horizontal) -->
-                        <line x1="0" y1="4"  x2="20" y2="4"  stroke="#fff" stroke-width="0.6" opacity="0.18"/>
-                        <line x1="0" y1="9"  x2="20" y2="9"  stroke="#fff" stroke-width="0.6" opacity="0.12"/>
-                        <line x1="0" y1="14" x2="20" y2="14" stroke="#fff" stroke-width="0.6" opacity="0.18"/>
+                        <line x1="0" y1="4" x2="20" y2="4" stroke="#fff" stroke-width="0.6" opacity="0.18" />
+                        <line x1="0" y1="9" x2="20" y2="9" stroke="#fff" stroke-width="0.6" opacity="0.12" />
+                        <line x1="0" y1="14" x2="20" y2="14" stroke="#fff" stroke-width="0.6" opacity="0.18" />
                         <!-- over-under weave highlights -->
-                        <rect x="3.5"  y="2.5" width="3" height="3" fill="#fff" opacity="0.12" rx="0.5"/>
-                        <rect x="8.5"  y="7.5" width="3" height="3" fill="#fff" opacity="0.12" rx="0.5"/>
-                        <rect x="13.5" y="12.5" width="3" height="3" fill="#fff" opacity="0.12" rx="0.5"/>
+                        <rect x="3.5" y="2.5" width="3" height="3" fill="#fff" opacity="0.12" rx="0.5" />
+                        <rect x="8.5" y="7.5" width="3" height="3" fill="#fff" opacity="0.12" rx="0.5" />
+                        <rect x="13.5" y="12.5" width="3" height="3" fill="#fff" opacity="0.12" rx="0.5" />
                     </pattern>
                 </defs>
-                <rect width="800" height="18" fill="url(#muslin-pat)"/>
+                <rect width="800" height="18" fill="url(#muslin-pat)" />
             </svg>
         </div>
 

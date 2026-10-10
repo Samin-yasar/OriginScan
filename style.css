@@ -1601,6 +1601,54 @@ input[type="text"]:focus {
   overflow-y: auto;
 }
 
+/* Thank You Modal */
+.thank-you-modal-content {
+  max-width: 460px;
+}
+
+.thank-you-body {
+  text-align: center;
+  padding: 2.25rem 2rem 2rem;
+}
+
+.thank-you-icon-wrap {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  border: 2px solid rgba(16, 185, 129, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #10b981;
+  font-size: 2rem;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
+}
+
+.thank-you-body h3 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.65rem;
+}
+
+.thank-you-body p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1.6rem;
+}
+
+.thank-you-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.thank-you-actions .btn {
+  min-width: 140px;
+}
+
 .help-section {
   margin-bottom: 1.5rem;
 }

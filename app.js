@@ -68,6 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeReportModalBtn = document.getElementById('close-report');
   const reportBarcodeInput = document.getElementById('report-barcode');
   const reportForm = document.getElementById('report-form');
+  const thankYouModal = document.getElementById('thank-you-modal');
+  const closeThankYouModalBtn = document.getElementById('close-thank-you');
+  const dismissThankYouBtn = document.getElementById('dismiss-thank-you');
   const accessibilityFab = document.querySelector('.accessibility-fab');
   const accessibilityBtn = document.getElementById('accessibility-btn');
   const darkModeToggle = document.getElementById('dark-mode-toggle');
@@ -1425,6 +1428,7 @@ a.click();
         showToast('Report sent! Thank you.', 'success');
         closeModal(reportModal);
         reportForm.reset();
+        openModal(thankYouModal);
       } else {
         throw new Error('Form submission failed');
       }
@@ -1568,6 +1572,20 @@ a.click();
     if (closeReportModalBtn) closeReportModalBtn.addEventListener('click', () => closeModal(reportModal));
     if (reportModal) reportModal.addEventListener('click', (e) => e.target === reportModal && closeModal(reportModal));
     if (reportForm) reportForm.addEventListener('submit', handleReportSubmit);
+
+    // Thank You Modal
+    if (closeThankYouModalBtn) closeThankYouModalBtn.addEventListener('click', () => closeModal(thankYouModal));
+    if (dismissThankYouBtn) dismissThankYouBtn.addEventListener('click', () => closeModal(thankYouModal));
+    if (thankYouModal) thankYouModal.addEventListener('click', (e) => e.target === thankYouModal && closeModal(thankYouModal));
+
+    // Keyboard support: Escape closes any active modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        [reportModal, helpModal, changelogModal, thankYouModal].forEach(m => {
+          if (m && m.classList.contains('active')) closeModal(m);
+        });
+      }
+    });
 
     // Actions
     if (shareResultBtn) shareResultBtn.addEventListener('click', shareResult);

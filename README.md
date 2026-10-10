@@ -1,8 +1,8 @@
 # OriginScan 🌍
 
-**Discover the origin of products instantly with a powerful, developer-friendly, and open-source barcode scanner.**
+![OriginScan Preview](assets/preview.png)
 
-OriginScan is a client-side web utility that scans EAN-13, UPC-A, UPC-E, and EAN-8 barcodes to determine their country of origin and product details. Combining a comprehensive offline **GS1 prefix registry** with free, community-driven APIs like **Open Food Facts**, OriginScan can distinguish between where a barcode was *registered* and where a product was actually *manufactured*.
+**Client-side barcode scanner that looks up GS1 registration countries offline and queries Open Food Facts to distinguish barcode registration from actual manufacturing origin.**
 
 [**View Live Demo**](https://originscan.samin-yasar.dev) · [**Report a Bug**](https://github.com/Samin-yasar/OriginScan/issues) · [**Contributing Guide**](CONTRIBUTING.md) · [**Accessibility**](ACCESSIBILITY.md)
 
@@ -13,10 +13,12 @@ OriginScan is a client-side web utility that scans EAN-13, UPC-A, UPC-E, and EAN
 Most barcode tools naively match 3 digits and claim "Made in France" — even if the product was manufactured elsewhere and only registered by a French parent company.
 
 OriginScan solves this with a **Multi-Tier Resolution Engine**:
-1. **Format Validation & Mod-10 Checksum**: Verifies the barcode's GS1 Mod-10 check digit and diagnoses typos before making any queries.
-2. **Offline GS1 Registry**: Maps over 150 prefix blocks with support for 2-digit, 3-digit, and 4-digit prefixes, special ranges (ISBN, ISSN, coupons), and restricted in-store barcodes.
+1. **Format Validation & Mod-10 Checksum**: Verifies the barcode GS1 Mod-10 check digit and diagnoses typos before making any queries.
+2. **Offline GS1 Registry**: Maps over 150 prefix blocks with support for 2-digit, 3-digit, and 4-digit prefixes, special ranges (ISBN, ISSN, coupons), and restricted in-store barcodes. **This lookup runs entirely in the browser — no server involved.**
 3. **Open Product Database (Tier 2)**: Queries the public Open Food Facts crowd-sourced database (with local in-memory LRU caching) to fetch actual product names, brands, images, and **declared manufacturing origins**.
 4. **Origin Transparency**: Separates the GS1 registration country from product-database origin information, which may describe ingredients rather than manufacturing.
+
+> **No proprietary backend.** OriginScan has no server of its own. The GS1 prefix table is bundled in `js/core/gs1-registry.js` and resolved 100% locally. Product lookups go to two public, unauthenticated APIs — Open Food Facts (`world.openfoodfacts.org`) and Open Library (`openlibrary.org`). The "Report suspicious result" form is processed by [FormSubmit](https://formsubmit.co) and e-mailed to the project maintainer; no data is stored by OriginScan itself.
 
 ---
 
@@ -65,11 +67,30 @@ OriginScan/
     └── ISSUE_TEMPLATE/      # Structured bug report & feature request templates
 ```
 
-### Optional REST Countries fallback
+---
 
-Country details are loaded from the bundled dataset first. For countries not included
-there, the app can use REST Countries API v5 when the page is configured with an API
-key before the modules load:
+## GS1 Prefix Data — Source & Provenance
+
+The offline prefix table in [`js/core/gs1-registry.js`](js/core/gs1-registry.js) is derived from the **GS1 General Specifications** (Section 2.1 — GS1 Company Prefix allocation) and the official registry at:
+
+> **https://www.gs1.org/standards/id-keys/company-prefix**
+
+| Detail | Value |
+|---|---|
+| Source | GS1 General Specifications, published by GS1 AISBL |
+| Coverage | 150+ prefix blocks (2-digit, 3-digit, 4-digit) |
+| Special ranges | ISBN 978/979, ISSN 977, coupons/vouchers 981–984 |
+| Restricted in-store | 020–029, 040–049, 200–299 (never registered to a country) |
+| Lookup mode | **100% offline — runs in the browser, no network request** |
+| Limitation | GS1 prefix = country of *barcode registration*, **not** manufacturing origin |
+
+GS1 does not publish a machine-readable dump of the complete prefix list. The table was assembled manually from the published General Specifications and spot-checked against known product databases. If you find an error or a newly allocated range, please [open an issue](https://github.com/Samin-yasar/OriginScan/issues) citing the GS1 source.
+
+---
+
+## Optional REST Countries Fallback
+
+Country details are loaded from the bundled dataset first. For countries not included there, the app can use the REST Countries API v3 when the page is configured with an API key before the modules load:
 
 ```html
 <script>
@@ -78,29 +99,9 @@ key before the modules load:
 <script type="module" src="./app.js"></script>
 ```
 
-Without this optional key, the app remains fully functional using the bundled country
-data and simply skips the online fallback.
+> ⚠️ **Security notice**: Any value placed here is **publicly visible** to anyone who views the page source or DevTools. Do **not** use a key with billing attached or one that must remain secret. The live demo at `originscan.samin-yasar.dev` does not set this key.
 
-### Manual SSH push workflow
-
-The repository includes a manual GitHub Actions workflow at
-`.github/workflows/push-over-ssh.yml`. It runs the test suite before pushing generated
-changes over SSH. It does not run for ordinary pushes.
-
-Configure these repository secrets before using the workflow:
-
-1. `SSH_PRIVATE_KEY`: an Ed25519 private key whose public key has write access to this
-   repository. Do not commit or print this value.
-2. `SSH_KNOWN_HOSTS`: the pinned `github.com` host key collected from a trusted
-   environment, for example:
-
-   ```bash
-   ssh-keyscan -t ed25519 github.com
-   ```
-
-Trigger it from **Actions → Push generated changes over SSH → Run workflow**. The
-workflow uses the selected branch, runs `npm install` and `npm test`, and only creates a
-commit when generated changes are present.
+Without this optional key, the app remains fully functional using the bundled country data and simply skips the online fallback.
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "name": "OriginScan",
   "short_name": "OriginScan",
-  "description": "Instantly discover where products come from. Scan EAN-13, UPC-A, EAN-8 barcodes and look up food, cosmetic, and book origins for free.",
+  "description": "Client-side barcode scanner that looks up GS1 registration countries offline and queries Open Food Facts to distinguish barcode registration from actual manufacturing origin.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

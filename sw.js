@@ -12,13 +12,16 @@
  *     (live data should always be fresh; network failure degrades gracefully).
  */
 
-const CACHE_NAME    = 'originscan-v1.1';
+const CACHE_NAME    = 'originscan-v1.7.0';
 const SHELL_ASSETS  = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './manifest.json',
+  './assets/vectors/shapla.svg',
+  './assets/vectors/ilish.svg',
+  './assets/preview.png',
   './js/core/validator.js',
   './js/core/gs1-registry.js',
   './js/core/product-api.js',
@@ -87,21 +90,47 @@ self.addEventListener('fetch', event => {
     return; // Let the browser handle it normally
   }
 
+  // HTML navigation requests — network-first so returning visitors always see the latest deploy
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(_networkFirst(request));
+    return;
+  }
+
   // CDN resources — stale-while-revalidate
   if (CDN_HOSTS.some(host => url.hostname === host)) {
     event.respondWith(_staleWhileRevalidate(request));
     return;
   }
 
-  // App shell and local assets — cache-first
+  // App shell static assets (CSS, JS, images) — cache-first
   event.respondWith(_cacheFirst(request));
 });
 
 // ── Strategies ─────────────────────────────────────────────────────────────
 
 /**
+ * Network-first: fetch latest HTML from network; fall back to cache when offline.
+ */
+async function _networkFirst(request) {
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse && networkResponse.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (_) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    const offlinePage = await caches.match('./index.html');
+    if (offlinePage) return offlinePage;
+    return new Response('Offline — resource unavailable', { status: 503 });
+  }
+}
+
+/**
  * Cache-first: serve from cache immediately; fall back to network if not cached.
- * Used for the app shell so the app loads instantly and works offline.
+ * Used for static assets so they load instantly and work offline.
  */
 async function _cacheFirst(request) {
   const cached = await caches.match(request);
@@ -115,12 +144,6 @@ async function _cacheFirst(request) {
     }
     return response;
   } catch (_) {
-    // If we're offline and the resource isn't cached, return a minimal offline page
-    // only for document requests (navigations)
-    if (request.destination === 'document') {
-      const offlinePage = await caches.match('./index.html');
-      if (offlinePage) return offlinePage;
-    }
     return new Response('Offline — resource unavailable', { status: 503 });
   }
 }

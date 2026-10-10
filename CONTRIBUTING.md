@@ -150,3 +150,26 @@ Types: `fix`, `feat`, `refactor`, `test`, `docs`, `style`, `chore`
 ## Questions?
 
 Open a [GitHub Discussion](https://github.com/Samin-yasar/OriginScan/discussions) or file an issue — happy to help.
+
+---
+
+## Manual SSH Push Workflow
+
+The repository includes a manual GitHub Actions workflow at
+`.github/workflows/push-over-ssh.yml`. It runs the test suite before pushing generated
+changes over SSH. It does not run for ordinary pushes.
+
+Configure these repository secrets before using the workflow:
+
+1. `SSH_PRIVATE_KEY`: an Ed25519 private key whose public key has write access to this
+   repository. Do not commit or print this value.
+2. `SSH_KNOWN_HOSTS`: the pinned `github.com` host key collected from a trusted
+   environment, for example:
+
+   ```bash
+   ssh-keyscan -t ed25519 github.com
+   ```
+
+Trigger it from **Actions → Push generated changes over SSH → Run workflow**. The
+workflow uses the selected branch, runs `npm install` and `npm test`, and only creates a
+commit when generated changes are present.
