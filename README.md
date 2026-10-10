@@ -4,7 +4,7 @@
 
 OriginScan is a client-side web utility that scans EAN-13, UPC-A, UPC-E, and EAN-8 barcodes to determine their country of origin and product details. Combining a comprehensive offline **GS1 prefix registry** with free, community-driven APIs like **Open Food Facts**, OriginScan can distinguish between where a barcode was *registered* and where a product was actually *manufactured*.
 
-[**View Live Demo**](https://originscan.samin-yasar.dev) · [**Report a Bug**](https://github.com/Samin-yasar/OriginScan/issues) · [**Contributing Guide**](CONTRIBUTING.md)
+[**View Live Demo**](https://originscan.samin-yasar.dev) · [**Report a Bug**](https://github.com/Samin-yasar/OriginScan/issues) · [**Contributing Guide**](CONTRIBUTING.md) · [**Accessibility**](ACCESSIBILITY.md)
 
 ---
 

@@ -127,6 +127,7 @@ Before opening a PR, please confirm:
 - [ ] The test suite passes: `node tests/test-suite.js`
 - [ ] The app loads correctly in a browser (`python -m http.server`)
 - [ ] Manual test: scan at least one barcode and check the result looks correct
+- [ ] UI changes follow our [Accessibility Guidelines](ACCESSIBILITY.md) (keyboard operability, focus indicators, semantic markup)
 - [ ] If you changed `gs1-registry.js`, cite the GS1 source URL in your PR description
 - [ ] Your commit messages are descriptive (e.g. `fix: correct prefix 880 to cover South Korea only`)
 
