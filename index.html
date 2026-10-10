@@ -553,10 +553,194 @@
     </footer>
 
     <footer class="signature-footer">
-        <p>Made with coffee and care in Bangladesh.</p>
-        <a href="https://github.com/Samin-yasar/OriginScan" target="_blank" rel="noopener noreferrer">
-            <i class="fab fa-github"></i> OriginScan on GitHub
-        </a>
+
+        <!-- Nakshi Kantha SVG Divider -->
+        <div class="kantha-divider" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 32" preserveAspectRatio="none" class="kantha-svg">
+                <!-- Repeating diamond-and-cross Kantha stitch motif -->
+                <defs>
+                    <pattern id="kantha-pat" x="0" y="0" width="40" height="32" patternUnits="userSpaceOnUse">
+                        <!-- horizontal threads -->
+                        <line x1="0" y1="16" x2="40" y2="16" stroke="#F42A41" stroke-width="1.2" stroke-dasharray="3,3"/>
+                        <!-- diamond outline -->
+                        <polygon points="20,4 34,16 20,28 6,16" fill="none" stroke="#F42A41" stroke-width="1.4"/>
+                        <!-- inner diamond -->
+                        <polygon points="20,10 26,16 20,22 14,16" fill="#F42A41" opacity="0.55"/>
+                        <!-- cross stitches at corners -->
+                        <line x1="6" y1="12" x2="10" y2="16" stroke="#fff" stroke-width="0.9" opacity="0.7"/>
+                        <line x1="6" y1="20" x2="10" y2="16" stroke="#fff" stroke-width="0.9" opacity="0.7"/>
+                        <line x1="34" y1="12" x2="30" y2="16" stroke="#fff" stroke-width="0.9" opacity="0.7"/>
+                        <line x1="34" y1="20" x2="30" y2="16" stroke="#fff" stroke-width="0.9" opacity="0.7"/>
+                        <!-- top/bottom border stitch lines -->
+                        <line x1="0" y1="3" x2="40" y2="3" stroke="#fff" stroke-width="0.6" stroke-dasharray="2,4" opacity="0.5"/>
+                        <line x1="0" y1="29" x2="40" y2="29" stroke="#fff" stroke-width="0.6" stroke-dasharray="2,4" opacity="0.5"/>
+                    </pattern>
+                </defs>
+                <rect width="800" height="32" fill="url(#kantha-pat)"/>
+            </svg>
+        </div>
+
+        <!-- Cultural icons row -->
+        <div class="cultural-icons" aria-label="Bengali cultural symbols">
+
+            <!-- Shapla (Water Lily) — national flower of Bangladesh -->
+            <div class="cultural-icon-wrap" title="Shapla — National Flower">
+                <svg class="cultural-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-label="Shapla water lily">
+                    <!-- petals -->
+                    <g fill="#F42A41" opacity="0.92">
+                        <ellipse cx="32" cy="18" rx="5" ry="12" transform="rotate(0 32 32)"/>
+                        <ellipse cx="32" cy="18" rx="5" ry="12" transform="rotate(40 32 32)"/>
+                        <ellipse cx="32" cy="18" rx="5" ry="12" transform="rotate(80 32 32)"/>
+                        <ellipse cx="32" cy="18" rx="5" ry="12" transform="rotate(120 32 32)"/>
+                        <ellipse cx="32" cy="18" rx="5" ry="12" transform="rotate(160 32 32)"/>
+                        <ellipse cx="32" cy="18" rx="5" ry="12" transform="rotate(200 32 32)"/>
+                        <ellipse cx="32" cy="18" rx="5" ry="12" transform="rotate(240 32 32)"/>
+                        <ellipse cx="32" cy="18" rx="5" ry="12" transform="rotate(280 32 32)"/>
+                        <ellipse cx="32" cy="18" rx="5" ry="12" transform="rotate(320 32 32)"/>
+                    </g>
+                    <!-- inner stamen -->
+                    <circle cx="32" cy="32" r="6" fill="#ffd700"/>
+                    <circle cx="32" cy="32" r="3" fill="#f59e0b"/>
+                    <!-- lily pad -->
+                    <ellipse cx="32" cy="50" rx="18" ry="6" fill="#006A4E" opacity="0.55"/>
+                    <path d="M32 44 L32 50" stroke="#006A4E" stroke-width="1.5" opacity="0.7"/>
+                    <!-- pad notch -->
+                    <path d="M32 44 L18 49 L20 44 Z" fill="#006A4E" opacity="0.35"/>
+                </svg>
+                <span class="cultural-label">শাপলা</span>
+            </div>
+
+            <!-- Hilsa Fish (Ilish) — national fish of Bangladesh -->
+            <div class="cultural-icon-wrap" title="Ilish — National Fish">
+                <svg class="cultural-icon" viewBox="0 0 80 48" xmlns="http://www.w3.org/2000/svg" aria-label="Hilsa fish">
+                    <!-- body -->
+                    <path d="M8,24 Q20,10 50,14 Q68,16 74,24 Q68,32 50,34 Q20,38 8,24 Z"
+                          fill="url(#hilsa-body)" stroke="#a0b4c8" stroke-width="0.8"/>
+                    <defs>
+                        <linearGradient id="hilsa-body" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stop-color="#c8d8e8"/>
+                            <stop offset="50%" stop-color="#b0c4d8"/>
+                            <stop offset="100%" stop-color="#8fafc8"/>
+                        </linearGradient>
+                        <linearGradient id="hilsa-scale-grad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#dce8f4" stop-opacity="0.8"/>
+                            <stop offset="100%" stop-color="#a0b8cc" stop-opacity="0.3"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- scales — rows of arcs -->
+                    <g fill="none" stroke="url(#hilsa-scale-grad)" stroke-width="0.9">
+                        <!-- row 1 -->
+                        <path d="M28,18 Q31,15 34,18"/>
+                        <path d="M34,18 Q37,15 40,18"/>
+                        <path d="M40,18 Q43,15 46,18"/>
+                        <path d="M46,17 Q49,14 52,17"/>
+                        <path d="M52,17 Q55,14 58,17"/>
+                        <!-- row 2 -->
+                        <path d="M24,22 Q27,19 30,22"/>
+                        <path d="M30,22 Q33,19 36,22"/>
+                        <path d="M36,22 Q39,19 42,22"/>
+                        <path d="M42,21 Q45,18 48,21"/>
+                        <path d="M48,21 Q51,18 54,21"/>
+                        <path d="M54,20 Q57,17 60,20"/>
+                        <!-- row 3 -->
+                        <path d="M26,27 Q29,24 32,27"/>
+                        <path d="M32,27 Q35,24 38,27"/>
+                        <path d="M38,27 Q41,24 44,27"/>
+                        <path d="M44,26 Q47,23 50,26"/>
+                        <path d="M50,26 Q53,23 56,26"/>
+                        <path d="M56,25 Q59,22 62,25"/>
+                        <!-- row 4 -->
+                        <path d="M30,31 Q33,28 36,31"/>
+                        <path d="M36,31 Q39,28 42,31"/>
+                        <path d="M42,30 Q45,27 48,30"/>
+                        <path d="M48,30 Q51,27 54,30"/>
+                        <path d="M54,29 Q57,26 60,29"/>
+                    </g>
+                    <!-- tail fin -->
+                    <path d="M8,24 L2,14 L12,20 Z" fill="#8fafc8" opacity="0.8"/>
+                    <path d="M8,24 L2,34 L12,28 Z" fill="#8fafc8" opacity="0.8"/>
+                    <!-- dorsal fin -->
+                    <path d="M38,14 Q45,6 55,14" fill="none" stroke="#a0b8cc" stroke-width="1.2"/>
+                    <path d="M38,14 Q45,10 55,14" fill="#c0d4e4" opacity="0.5"/>
+                    <!-- pectoral fin -->
+                    <path d="M42,24 Q50,28 52,35" fill="none" stroke="#a0b8cc" stroke-width="1"/>
+                    <path d="M42,24 Q48,30 52,35 Q46,28 42,24Z" fill="#b4c8d8" opacity="0.4"/>
+                    <!-- eye -->
+                    <circle cx="65" cy="22" r="2.5" fill="#fff"/>
+                    <circle cx="65.5" cy="22" r="1.4" fill="#1e293b"/>
+                    <circle cx="66" cy="21.2" r="0.5" fill="#fff"/>
+                    <!-- mouth -->
+                    <path d="M74,24 Q76,22 76,24" fill="none" stroke="#7a9ab0" stroke-width="0.8"/>
+                    <!-- lateral line -->
+                    <path d="M14,24 Q35,22 64,23" fill="none" stroke="#a0b8cc" stroke-width="0.6" stroke-dasharray="2,3" opacity="0.6"/>
+                </svg>
+                <span class="cultural-label">ইলিশ</span>
+            </div>
+
+            <!-- Sheuli / Shiuli flower (Night jasmine) -->
+            <div class="cultural-icon-wrap" title="Sheuli — Bengal's beloved flower">
+                <svg class="cultural-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-label="Sheuli flower">
+                    <!-- stem -->
+                    <line x1="32" y1="64" x2="32" y2="40" stroke="#006A4E" stroke-width="2" stroke-linecap="round"/>
+                    <!-- leaves -->
+                    <path d="M32,52 Q20,46 18,38 Q26,42 32,52 Z" fill="#006A4E" opacity="0.7"/>
+                    <path d="M32,52 Q44,46 46,38 Q38,42 32,52 Z" fill="#006A4E" opacity="0.7"/>
+                    <!-- petals — 5 narrow white petals -->
+                    <g fill="#fff" stroke="#e8d8c0" stroke-width="0.5">
+                        <ellipse cx="32" cy="24" rx="3.5" ry="10" transform="rotate(0 32 32)"/>
+                        <ellipse cx="32" cy="24" rx="3.5" ry="10" transform="rotate(72 32 32)"/>
+                        <ellipse cx="32" cy="24" rx="3.5" ry="10" transform="rotate(144 32 32)"/>
+                        <ellipse cx="32" cy="24" rx="3.5" ry="10" transform="rotate(216 32 32)"/>
+                        <ellipse cx="32" cy="24" rx="3.5" ry="10" transform="rotate(288 32 32)"/>
+                    </g>
+                    <!-- orange tube centre -->
+                    <circle cx="32" cy="32" r="5" fill="#f97316"/>
+                    <circle cx="32" cy="32" r="2.5" fill="#ea580c"/>
+                    <!-- stamens -->
+                    <g stroke="#fbbf24" stroke-width="0.8" stroke-linecap="round">
+                        <line x1="32" y1="28" x2="32" y2="25"/>
+                        <line x1="35" y1="29" x2="37" y2="27"/>
+                        <line x1="29" y1="29" x2="27" y2="27"/>
+                        <line x1="34" y1="35" x2="36" y2="37"/>
+                        <line x1="30" y1="35" x2="28" y2="37"/>
+                    </g>
+                </svg>
+                <span class="cultural-label">শিউলি</span>
+            </div>
+
+        </div>
+
+        <!-- Signature text -->
+        <div class="sig-text">
+            <p>তৈরি হয়েছে বাংলাদেশে — Made with care in Bangladesh</p>
+            <a href="https://github.com/Samin-yasar/OriginScan" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-github"></i> OriginScan on GitHub
+            </a>
+        </div>
+
+        <!-- Bottom Muslin weave border -->
+        <div class="muslin-border" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 18" preserveAspectRatio="none" class="muslin-svg">
+                <defs>
+                    <pattern id="muslin-pat" x="0" y="0" width="20" height="18" patternUnits="userSpaceOnUse">
+                        <!-- warp threads (vertical) -->
+                        <line x1="5"  y1="0" x2="5"  y2="18" stroke="#fff" stroke-width="0.6" opacity="0.25"/>
+                        <line x1="10" y1="0" x2="10" y2="18" stroke="#fff" stroke-width="0.6" opacity="0.15"/>
+                        <line x1="15" y1="0" x2="15" y2="18" stroke="#fff" stroke-width="0.6" opacity="0.25"/>
+                        <!-- weft threads (horizontal) -->
+                        <line x1="0" y1="4"  x2="20" y2="4"  stroke="#fff" stroke-width="0.6" opacity="0.18"/>
+                        <line x1="0" y1="9"  x2="20" y2="9"  stroke="#fff" stroke-width="0.6" opacity="0.12"/>
+                        <line x1="0" y1="14" x2="20" y2="14" stroke="#fff" stroke-width="0.6" opacity="0.18"/>
+                        <!-- over-under weave highlights -->
+                        <rect x="3.5"  y="2.5" width="3" height="3" fill="#fff" opacity="0.12" rx="0.5"/>
+                        <rect x="8.5"  y="7.5" width="3" height="3" fill="#fff" opacity="0.12" rx="0.5"/>
+                        <rect x="13.5" y="12.5" width="3" height="3" fill="#fff" opacity="0.12" rx="0.5"/>
+                    </pattern>
+                </defs>
+                <rect width="800" height="18" fill="url(#muslin-pat)"/>
+            </svg>
+        </div>
+
     </footer>
     <div id="loading-overlay" class="loading-overlay" style="display: none;">
         <div class="loading-content">
