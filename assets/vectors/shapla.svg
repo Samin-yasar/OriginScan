@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <!-- Definitions for gradient shading -->
+  <defs>
+    <linearGradient id="wave-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#737373" />
+      <stop offset="100%" stop-color="#000000" />
+    </linearGradient>
+  </defs>
+
+  <style>
+    .petal-dark { fill: #000000; }
+    .petal-light { fill: #D1D5DB; }
+    .stroke-outline { stroke: #000000; stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; }
+    .wave { fill: url(#wave-gradient); stroke: #000000; stroke-width: 1.5; }
+    .stem { fill: #000000; }
+  </style>
+
+  <g transform="translate(0, 10)">
+    <!-- Central Stem -->
+    <rect class="stem" x="242" y="315" width="16" height="48" rx="2" />
+
+    <!-- FLOWER PETALS -->
+    <!-- Center Vertical Petal (Petal 1) -->
+    <path class="petal-dark stroke-outline" d="M 250 50 C 250 50, 215 150, 250 322 Z" />
+    <path class="petal-light stroke-outline" d="M 250 50 C 250 50, 285 150, 250 322 Z" />
+
+    <!-- Inner Left Petal (Petal 2 L) -->
+    <path class="petal-dark stroke-outline" d="M 175 75 C 175 75, 170 180, 250 322 Z" />
+    <path class="petal-light stroke-outline" d="M 175 75 C 175 75, 220 160, 250 322 Z" />
+
+    <!-- Inner Right Petal (Petal 2 R) -->
+    <path class="petal-light stroke-outline" d="M 325 75 C 325 75, 330 180, 250 322 Z" />
+    <path class="petal-dark stroke-outline" d="M 325 75 C 325 75, 280 160, 250 322 Z" />
+
+    <!-- Mid Left Petal (Petal 3 L) -->
+    <path class="petal-dark stroke-outline" d="M 108 142 C 108 142, 125 240, 250 322 Z" />
+    <path class="petal-light stroke-outline" d="M 108 142 C 108 142, 175 200, 250 322 Z" />
+
+    <!-- Mid Right Petal (Petal 3 R) -->
+    <path class="petal-light stroke-outline" d="M 392 142 C 392 142, 375 240, 250 322 Z" />
+    <path class="petal-dark stroke-outline" d="M 392 142 C 392 142, 325 200, 250 322 Z" />
+
+    <!-- Outer Left Petal (Petal 4 L) -->
+    <path class="petal-dark stroke-outline" d="M 60 235 C 60 235, 100 300, 250 322 Z" />
+    <path class="petal-light stroke-outline" d="M 60 235 C 60 235, 140 245, 250 322 Z" />
+
+    <!-- Outer Right Petal (Petal 4 R) -->
+    <path class="petal-light stroke-outline" d="M 440 235 C 440 235, 400 300, 250 322 Z" />
+    <path class="petal-dark stroke-outline" d="M 440 235 C 440 235, 360 245, 250 322 Z" />
+
+    <!-- Bottom Horizontal Left Petal (Petal 5 L) -->
+    <path class="petal-dark stroke-outline" d="M 48 312 C 48 312, 110 380, 250 322 Z" />
+    <path class="petal-light stroke-outline" d="M 48 312 C 48 312, 130 300, 250 322 Z" />
+
+    <!-- Bottom Horizontal Right Petal (Petal 5 R) -->
+    <path class="petal-light stroke-outline" d="M 452 312 C 452 312, 390 380, 250 322 Z" />
+    <path class="petal-dark stroke-outline" d="M 452 312 C 452 312, 370 300, 250 322 Z" />
+
+    <!-- WATER WAVES AT THE BASE -->
+    <g class="wave">
+      <!-- Wave 1 (Top) -->
+      <path d="M 78 355 Q 121 343 164 355 T 250 355 T 336 355 T 422 355 C 380 375 320 380 250 380 C 180 380 120 375 78 355 Z" />
+      <!-- Wave 2 -->
+      <path d="M 98 376 Q 136 366 174 376 T 250 376 T 326 376 T 402 376 C 365 398 310 405 250 405 C 190 405 135 398 98 376 Z" />
+      <!-- Wave 3 -->
+      <path d="M 118 398 Q 151 389 184 398 T 250 398 T 316 398 T 382 398 C 348 420 300 428 250 428 C 200 428 152 420 118 398 Z" />
+      <!-- Wave 4 (Bottom) -->
+      <path d="M 148 422 Q 173 415 199 422 T 250 422 T 301 422 T 352 422 C 325 442 288 448 250 448 C 212 448 175 442 148 422 Z" />
+    </g>
+  </g>
+</svg>

@@ -395,10 +395,11 @@ footer.signature-footer {
   transition: filter var(--transition);
 }
 
-/* Hilsa is wider — allow its natural aspect ratio */
-.cultural-icon[aria-label="Hilsa fish"] {
-  width: 90px;
-  height: 55px;
+/* Ilish is wider — allow its natural aspect ratio */
+.cultural-icon--wide {
+  width: 110px;
+  height: 50px;
+  object-fit: contain;
 }
 
 .cultural-label {

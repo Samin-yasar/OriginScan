@@ -72,6 +72,10 @@ Maintainers will follow these guidelines in determining consequences for actions
 
 ---
 
+## Contribution Licensing
+
+By contributing to OriginScan (e.g., submitting a pull request, patch, or code snippet), you agree that your contribution will be licensed under the **GNU General Public License v3.0 (GPLv3)** — the same license that governs the project. If you do not wish your contribution to be licensed under these terms, please do not submit it.
+
 ## Attribution
 
 This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 2.1, available at  

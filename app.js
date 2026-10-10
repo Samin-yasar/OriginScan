@@ -1394,7 +1394,7 @@ a.click();
   async function shareResult() {
     const country = countryNameElement ? countryNameElement.textContent : 'N/A';
     const barcode = lastScannedBarcode || 'N/A';
-    const shareUrl = `https://samin-yasar.github.io/OriginScan?barcode=${barcode}`;
+    const shareUrl = `https://originscan.samin-yasar.dev?barcode=${barcode}`;
     const shareText = `I scanned a product from ${country}! Barcode: ${barcode}. Check it out on OriginScan.`;
 
     if (navigator.share) {

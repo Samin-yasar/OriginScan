@@ -42,6 +42,8 @@ Instead, report them privately using one of the following methods:
 2. **Direct contact**  
    If you are unable to use the advisory form, open a [GitHub Discussion](https://github.com/Samin-yasar/OriginScan/discussions) marked as a question and include only enough detail to identify the issue — do not include a full proof-of-concept publicly. The maintainer will follow up privately.
 
+> **Privacy note:** When you submit a GitHub Security Advisory or interact via GitHub Issues or Discussions, your GitHub account data and the content you submit are processed by **GitHub, Inc.** under [GitHub's General Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement). OriginScan's maintainer will have access to this information solely to triage and resolve your report. Advisory content will remain confidential until coordinated public disclosure. See [OriginScan's Privacy Notice §17](https://originscan.samin-yasar.dev/policy/privacy-notice.html#section17) for full details.
+
 ---
 
 ## What to Include in Your Report
